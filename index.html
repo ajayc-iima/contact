@@ -3,282 +3,382 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Directory</title>
+    <title>Enhanced User-Friendly Contact Directory</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border-radius: 5px;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 20px;
-        }
-        input, button, select {
-            margin-bottom: 10px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
-            background-color: #f9f9f9;
-            margin-bottom: 10px;
-            padding: 15px;
-            border-radius: 4px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .search-sort {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        #search, #sort {
-            width: 48%;
-        }
-        .edit-btn, .delete-btn {
-            margin-left: 10px;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        .edit-btn {
-            background-color: #008CBA;
-            color: white;
-        }
-        .delete-btn {
-            background-color: #f44336;
-            color: white;
-        }
+        .transition-all { transition: all 0.3s ease; }
+        .hover-scale:hover { transform: scale(1.02); }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Contact Directory</h1>
-        <form id="contact-form">
-            <input type="text" id="name" placeholder="Name" required>
-            <input type="tel" id="phone" placeholder="Phone" required>
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="text" id="address" placeholder="Address">
-            <input type="date" id="birthday" placeholder="Birthday">
-            <button type="submit" id="submit-btn">Add Contact</button>
-        </form>
-        <div class="search-sort">
-            <input type="text" id="search" placeholder="Search contacts">
-            <select id="sort">
-                <option value="name">Sort by Name</option>
-                <option value="phone">Sort by Phone</option>
-                <option value="email">Sort by Email</option>
-            </select>
+<body class="bg-gradient-to-r from-blue-100 to-indigo-100 min-h-screen">
+    <div class="container mx-auto p-4 max-w-4xl">
+        <h1 class="text-4xl font-bold text-center mb-6 text-indigo-700">Mardana Contact Directory</h1>
+        
+        <div id="auth-section" class="mb-8 bg-white p-6 rounded-lg shadow-lg">
+    <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Authentication</h2>
+    <div class="flex items-center space-x-2 mb-4">
+        <i class="fas fa-lock text-indigo-500"></i>
+        <input type="password" id="security-code" placeholder="Enter security code" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+    </div>
+    <p class="text-sm text-gray-600 mb-4">Hint: This 8-letter word was Mardana's old name, starting with "m" and ending with "a".</p>
+    <button id="auth-btn" class="w-full bg-indigo-500 text-white p-2 rounded hover:bg-indigo-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-300">
+        <i class="fas fa-sign-in-alt mr-2"></i>Authenticate
+    </button>
+</div>
+
+        <div id="main-content" class="hidden">
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Add New Contact</h2>
+                <form id="contact-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-user text-indigo-500"></i>
+                            <input type="text" id="name" placeholder="Name" required class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-phone text-indigo-500"></i>
+                            <input type="tel" id="phone" placeholder="Phone" required class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-envelope text-indigo-500"></i>
+                            <input type="email" id="email" placeholder="Email" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-users text-indigo-500"></i>
+                            <select id="group" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                <option value="">Select Group</option>
+                                <option value="Family">Family</option>
+                                <option value="Friends">Friends</option>
+                                <option value="Work">Work</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center space-x-2 md:col-span-2">
+                            <i class="fab fa-linkedin text-indigo-500"></i>
+                            <input type="url" id="linkedin" placeholder="LinkedIn Profile" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 transition-all mt-4 focus:outline-none focus:ring-2 focus:ring-green-300">
+                        <i class="fas fa-plus-circle mr-2"></i>Add Contact
+                    </button>
+                </form>
+            </div>
+
+            <div id="status-message" class="mb-4 p-2 rounded hidden"></div>
+
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Contact List</h2>
+                <div class="mb-4 flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+                    <div class="flex-grow flex items-center space-x-2 bg-gray-100 rounded">
+                        <i class="fas fa-search text-indigo-500 ml-2"></i>
+                        <input type="text" id="search" placeholder="Search contacts..." class="flex-grow p-2 bg-transparent focus:outline-none">
+                    </div>
+                    <select id="filter-group" class="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        <option value="">All Groups</option>
+                        <option value="Family">Family</option>
+                        <option value="Friends">Friends</option>
+                        <option value="Work">Work</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <ul id="contact-list" class="space-y-2"></ul>
+            </div>
         </div>
-        <ul id="contact-list"></ul>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="delete-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+            <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+                <h2 class="text-2xl font-semibold mb-4 text-red-600">Confirm Deletion</h2>
+                <p class="mb-4">Please enter the security code to delete this contact:</p>
+                <div class="flex items-center space-x-2 mb-4">
+                    <i class="fas fa-key text-red-500"></i>
+                    <input type="password" id="delete-security-code" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-red-300" placeholder="Enter security code">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button id="cancel-delete" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </button>
+                    <button id="confirm-delete" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all focus:outline-none focus:ring-2 focus:ring-red-300">
+                        <i class="fas fa-trash-alt mr-2"></i>Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div id="edit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+            <div class="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Edit Contact</h2>
+                <form id="edit-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-user text-indigo-500"></i>
+                            <input type="text" id="edit-name" placeholder="Name" required class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-phone text-indigo-500"></i>
+                            <input type="tel" id="edit-phone" placeholder="Phone" required class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-envelope text-indigo-500"></i>
+                            <input type="email" id="edit-email" placeholder="Email" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-users text-indigo-500"></i>
+                            <select id="edit-group" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                <option value="">Select Group</option>
+                                <option value="Family">Family</option>
+                                <option value="Friends">Friends</option>
+                                <option value="Work">Work</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center space-x-2 md:col-span-2">
+                            <i class="fab fa-linkedin text-indigo-500"></i>
+                            <input type="url" id="edit-linkedin" placeholder="LinkedIn Profile" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i class="fas fa-key text-indigo-500"></i>
+                        <input type="password" id="edit-security-code" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="Enter security code to confirm edit">
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" id="cancel-edit" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            <i class="fas fa-times mr-2"></i>Cancel
+                        </button>
+                        <button type="submit" id="confirm-edit" class="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                            <i class="fas fa-save mr-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-        import { getDatabase, ref, push, remove, onValue, get, update, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
-
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyA3Tb-ia3Po1BIZqZ2Jhy9pXxuwlKI874g",
             authDomain: "contact-41939.firebaseapp.com",
+            databaseURL: "https://contact-41939-default-rtdb.firebaseio.com",
             projectId: "contact-41939",
             storageBucket: "contact-41939.appspot.com",
             messagingSenderId: "392340324726",
             appId: "1:392340324726:web:4f94aa39dc7b926a003a57",
-            measurementId: "G-LJQJGKEK9M",
-            databaseURL: "https://contact-41939-default-rtdb.firebaseio.com/"
+            measurementId: "G-LJQJGKEK9M"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const contactsRef = database.ref('contacts');
 
-        console.log("Firebase initialized:", app);
-        console.log("Database reference:", database);
-
+        const authSection = document.getElementById('auth-section');
+        const mainContent = document.getElementById('main-content');
+        const authBtn = document.getElementById('auth-btn');
+        const securityCodeInput = document.getElementById('security-code');
         const form = document.getElementById('contact-form');
         const contactList = document.getElementById('contact-list');
+        const statusMessage = document.getElementById('status-message');
         const searchInput = document.getElementById('search');
-        const sortSelect = document.getElementById('sort');
-        const submitBtn = document.getElementById('submit-btn');
-        let editingKey = null;
+        const filterGroup = document.getElementById('filter-group');
+        const deleteModal = document.getElementById('delete-modal');
+        const deleteSecurityCodeInput = document.getElementById('delete-security-code');
+        const cancelDeleteBtn = document.getElementById('cancel-delete');
+        const confirmDeleteBtn = document.getElementById('confirm-delete');
+        const editModal = document.getElementById('edit-modal');
+        const editForm = document.getElementById('edit-form');
+        const editSecurityCodeInput = document.getElementById('edit-security-code');
+        const cancelEditBtn = document.getElementById('cancel-edit');
 
-        function renderContacts(contacts) {
-            contactList.innerHTML = '';
-            if (contacts) {
-                Object.entries(contacts).forEach(([key, contact]) => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        <strong>${contact.name}</strong><br>
-                        Phone: ${contact.phone}<br>
-                        Email: ${contact.email}<br>
-                        Address: ${contact.address || 'N/A'}<br>
-                        Birthday: ${contact.birthday || 'N/A'}
-                        <button class="edit-btn" data-key="${key}">Edit</button>
-                        <button class="delete-btn" data-key="${key}">Delete</button>
-                    `;
-                    contactList.appendChild(li);
-                });
-            }
+        const SECURITY_CODE = 'mayurana';
+        const DELETE_SECURITY_CODE = 'R@j@@2024';
+        let currentDeleteKey = null;
+        let currentEditKey = null;
+
+        function showMessage(message, isError = false) {
+            statusMessage.textContent = message;
+            statusMessage.className = `mb-4 p-2 rounded ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+            statusMessage.classList.remove('hidden');
+            setTimeout(() => {
+                statusMessage.classList.add('hidden');
+            }, 3000);
         }
 
-        function addOrUpdateContact(e) {
-            e.preventDefault();
-            const contact = {
-                name: document.getElementById('name').value,
-                phone: document.getElementById('phone').value,
-                email: document.getElementById('email').value,
-                address: document.getElementById('address').value,
-                birthday: document.getElementById('birthday').value
-            };
-            
-            if (editingKey) {
-                set(ref(database, 'contacts/' + editingKey), contact)
-                    .then(() => {
-                        console.log("Contact updated successfully");
-                        editingKey = null;
-                        submitBtn.textContent = 'Add Contact';
-                    })
-                    .catch((error) => {
-                        console.error("Error updating contact: ", error);
-                    });
+        authBtn.addEventListener('click', () => {
+            if (securityCodeInput.value === SECURITY_CODE) {
+                authSection.classList.add('hidden');
+                mainContent.classList.remove('hidden');
             } else {
-                push(ref(database, 'contacts'), contact)
-                    .then(() => {
-                        console.log("Contact added successfully");
-                    })
-                    .catch((error) => {
-                        console.error("Error adding contact: ", error);
-                    });
+                showMessage('Incorrect security code', true);
             }
+        });
+
+        form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const contact = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        group: document.getElementById('group').value,
+        linkedin: document.getElementById('linkedin').value,
+        timestamp: new Date().toISOString()
+    };
+
+    contactsRef.push(contact)
+        .then(() => {
+            showMessage("Contact added successfully!");
             form.reset();
-        }
-
-        function deleteContact(key) {
-            remove(ref(database, 'contacts/' + key))
-                .then(() => console.log("Contact deleted successfully"))
-                .catch((error) => console.error("Error deleting contact: ", error));
-        }
-
-        function editContact(key) {
-            get(ref(database, 'contacts/' + key))
-                .then((snapshot) => {
-                    const contact = snapshot.val();
-                    if (contact) {
-                        document.getElementById('name').value = contact.name;
-                        document.getElementById('phone').value = contact.phone;
-                        document.getElementById('email').value = contact.email;
-                        document.getElementById('address').value = contact.address || '';
-                        document.getElementById('birthday').value = contact.birthday || '';
-                        
-                        editingKey = key;
-                        submitBtn.textContent = 'Update Contact';
-                    } else {
-                        console.error("Contact not found");
-                    }
-                })
-                .catch((error) => console.error("Error fetching contact for edit: ", error));
-        }
-
-        function searchContacts() {
-            const searchTerm = searchInput.value.toLowerCase();
-            get(ref(database, 'contacts'))
-                .then((snapshot) => {
-                    const contacts = snapshot.val();
-                    if (contacts) {
-                        const filteredContacts = Object.entries(contacts).reduce((acc, [key, contact]) => {
-                            if (contact.name.toLowerCase().includes(searchTerm) ||
-                                contact.phone.includes(searchTerm) ||
-                                contact.email.toLowerCase().includes(searchTerm)) {
-                                acc[key] = contact;
-                            }
-                            return acc;
-                        }, {});
-                        renderContacts(filteredContacts);
-                    } else {
-                        console.log("No contacts found");
-                        renderContacts({});
-                    }
-                })
-                .catch((error) => console.error("Error searching contacts: ", error));
-        }
-
-        function sortContacts() {
-            const sortBy = sortSelect.value;
-            get(ref(database, 'contacts'))
-                .then((snapshot) => {
-                    const contacts = snapshot.val();
-                    if (contacts) {
-                        const sortedContacts = Object.entries(contacts)
-                            .sort(([, a], [, b]) => a[sortBy].localeCompare(b[sortBy]))
-                            .reduce((acc, [key, value]) => {
-                                acc[key] = value;
-                                return acc;
-                            }, {});
-                        renderContacts(sortedContacts);
-                    } else {
-                        console.log("No contacts to sort");
-                        renderContacts({});
-                    }
-                })
-                .catch((error) => console.error("Error sorting contacts: ", error));
-        }
-
-        form.addEventListener('submit', addOrUpdateContact);
-        searchInput.addEventListener('input', searchContacts);
-        sortSelect.addEventListener('change', sortContacts);
-
-        contactList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('edit-btn')) {
-                editContact(e.target.getAttribute('data-key'));
-            } else if (e.target.classList.contains('delete-btn')) {
-                deleteContact(e.target.getAttribute('data-key'));
-            }
+        })
+        .catch((error) => {
+            showMessage("Error adding contact: " + error.message, true);
         });
+});
 
-        // Retrieve and display contacts when the page loads
-        onValue(ref(database, 'contacts'), (snapshot) => {
-            const contacts = snapshot.val();
-            if (contacts) {
-                console.log("Contacts retrieved:", contacts);
-                renderContacts(contacts);
-            } else {
-                console.log("No contacts found");
-                renderContacts({});
-            }
-        }, (error) => {
-            console.error("Error retrieving contacts:", error);
+function renderContacts(contacts) {
+    contactList.innerHTML = '';
+    if (contacts) {
+        Object.entries(contacts).forEach(([key, contact]) => {
+            const li = document.createElement('li');
+            li.className = 'bg-white p-4 rounded shadow hover:shadow-md transition-all hover-scale';
+            li.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div>
+                        <strong class="text-lg">${contact.name}</strong>
+                        <span class="ml-2 px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs">${contact.group || 'No Group'}</span><br>
+                        <span class="text-gray-600"><i class="fas fa-phone mr-2"></i>${contact.phone}</span><br>
+                        ${contact.email ? `<span class="text-gray-600"><i class="fas fa-envelope mr-2"></i>${contact.email}</span><br>` : ''}
+                        ${contact.linkedin ? `<a href="${contact.linkedin}" target="_blank" class="text-blue-500 hover:text-blue-700"><i class="fab fa-linkedin mr-2"></i>LinkedIn Profile</a>` : ''}
+                    </div>
+                    <div>
+                        <button class="edit-btn text-blue-500 hover:text-blue-700 mr-2" data-key="${key}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn text-red-500 hover:text-red-700" data-key="${key}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            contactList.appendChild(li);
         });
+    } else {
+        contactList.innerHTML = '<li class="text-center text-gray-500">No contacts found</li>';
+    }
+}
 
-        console.log("Script fully loaded and executed");
-    </script>
+contactList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('delete-btn') || e.target.closest('.delete-btn')) {
+        currentDeleteKey = e.target.closest('.delete-btn').getAttribute('data-key');
+        deleteModal.classList.remove('hidden');
+        deleteModal.classList.add('flex');
+        deleteSecurityCodeInput.value = '';
+    } else if (e.target.classList.contains('edit-btn') || e.target.closest('.edit-btn')) {
+        currentEditKey = e.target.closest('.edit-btn').getAttribute('data-key');
+        openEditModal(currentEditKey);
+    }
+});
+
+function openEditModal(key) {
+    database.ref('contacts/' + key).once('value', (snapshot) => {
+        const contact = snapshot.val();
+        document.getElementById('edit-name').value = contact.name;
+        document.getElementById('edit-phone').value = contact.phone;
+        document.getElementById('edit-email').value = contact.email || '';
+        document.getElementById('edit-group').value = contact.group || '';
+        document.getElementById('edit-linkedin').value = contact.linkedin || '';
+        editModal.classList.remove('hidden');
+        editModal.classList.add('flex');
+    });
+}
+
+editForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (editSecurityCodeInput.value === DELETE_SECURITY_CODE) {
+        const updatedContact = {
+            name: document.getElementById('edit-name').value,
+            phone: document.getElementById('edit-phone').value,
+            email: document.getElementById('edit-email').value,
+            group: document.getElementById('edit-group').value,
+            linkedin: document.getElementById('edit-linkedin').value,
+            timestamp: new Date().toISOString()
+        };
+
+        database.ref('contacts/' + currentEditKey).update(updatedContact)
+            .then(() => {
+                showMessage("Contact updated successfully!");
+                editModal.classList.add('hidden');
+                editModal.classList.remove('flex');
+                currentEditKey = null;
+            })
+            .catch((error) => {
+                showMessage("Error updating contact: " + error.message, true);
+            });
+    } else {
+        showMessage("Incorrect security code", true);
+    }
+});
+
+cancelDeleteBtn.addEventListener('click', () => {
+    deleteModal.classList.add('hidden');
+    deleteModal.classList.remove('flex');
+    currentDeleteKey = null;
+});
+
+confirmDeleteBtn.addEventListener('click', () => {
+    if (deleteSecurityCodeInput.value === DELETE_SECURITY_CODE) {
+        database.ref('contacts/' + currentDeleteKey).remove()
+            .then(() => {
+                showMessage("Contact deleted successfully!");
+                deleteModal.classList.add('hidden');
+                deleteModal.classList.remove('flex');
+                currentDeleteKey = null;
+            })
+            .catch((error) => {
+                showMessage("Error deleting contact: " + error.message, true);
+            });
+    } else {
+        showMessage("Incorrect deletion security code", true);
+    }
+});
+
+cancelEditBtn.addEventListener('click', () => {
+    editModal.classList.add('hidden');
+    editModal.classList.remove('flex');
+    currentEditKey = null;
+});
+
+function filterContacts() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const groupFilter = filterGroup.value;
+
+    contactsRef.once('value', (snapshot) => {
+        const contacts = snapshot.val();
+        const filteredContacts = Object.fromEntries(
+            Object.entries(contacts).filter(([_, contact]) => 
+                (contact.name.toLowerCase().includes(searchTerm) || 
+                 contact.phone.includes(searchTerm) ||
+                 (contact.email && contact.email.toLowerCase().includes(searchTerm))) &&
+                (!groupFilter || contact.group === groupFilter)
+            )
+        );
+        renderContacts(filteredContacts);
+    });
+}
+
+searchInput.addEventListener('input', filterContacts);
+filterGroup.addEventListener('change', filterContacts);
+
+contactsRef.on('value', (snapshot) => {
+    const contacts = snapshot.val();
+    renderContacts(contacts);
+}, (error) => {
+    showMessage("Error fetching contacts: " + error.message, true);
+});
+
+
+
+</script>
 </body>
 </html>
