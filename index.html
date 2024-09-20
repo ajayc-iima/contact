@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Directory</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        input, button, select {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .search-sort {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        #search, #sort {
+            width: 48%;
+        }
+        .edit-btn, .delete-btn {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .edit-btn {
+            background-color: #008CBA;
+            color: white;
+        }
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contact Directory</h1>
+        <form id="contact-form">
+            <input type="text" id="name" placeholder="Name" required>
+            <input type="tel" id="phone" placeholder="Phone" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="text" id="address" placeholder="Address">
+            <input type="date" id="birthday" placeholder="Birthday">
+            <button type="submit" id="submit-btn">Add Contact</button>
+        </form>
+        <div class="search-sort">
+            <input type="text" id="search" placeholder="Search contacts">
+            <select id="sort">
+                <option value="name">Sort by Name</option>
+                <option value="phone">Sort by Phone</option>
+                <option value="email">Sort by Email</option>
+            </select>
+        </div>
+        <ul id="contact-list"></ul>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics.js";
+        import { getDatabase, ref, push, remove, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3Tb-ia3Po1BIZqZ2Jhy9pXxuwlKI874g",
+            authDomain: "contact-41939.firebaseapp.com",
+            projectId: "contact-41939",
+            storageBucket: "contact-41939.appspot.com",
+            messagingSenderId: "392340324726",
+            appId: "1:392340324726:web:4f94aa39dc7b926a003a57",
+            measurementId: "G-LJQJGKEK9M",
+            databaseURL: "https://contact-41939-default-rtdb.firebaseio.com/" // Add this line
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+
+        const form = document.getElementById('contact-form');
+        const contactList = document.getElementById('contact-list');
+        const searchInput = document.getElementById('search');
+        const sortSelect = document.getElementById('sort');
+        const submitBtn = document.getElementById('submit-btn');
+        let editingKey = null;
+
+        function renderContacts(contacts) {
+            contactList.innerHTML = '';
+            if (contacts) {
+                Object.entries(contacts).forEach(([key, contact]) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <strong>${contact.name}</strong><br>
+                        Phone: ${contact.phone}<br>
+                        Email: ${contact.email}<br>
+                        Address: ${contact.address || 'N/A'}<br>
+                        Birthday: ${contact.birthday || 'N/A'}
+                        <button class="edit-btn" data-key="${key}">Edit</button>
+                        <button class="delete-btn" data-key="${key}">Delete</button>
+                    `;
+                    contactList.appendChild(li);
+                });
+            }
+        }
+
+        function addOrUpdateContact(e) {
+            e.preventDefault();
+            const contact = {
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value,
+                birthday: document.getElementById('birthday').value
+            };
+            
+            if (editingKey) {
+                update(ref(database, 'contacts/' + editingKey), contact)
+                    .then(() => {
+                        console.log("Contact updated successfully");
+                        editingKey = null;
+                        submitBtn.textContent = 'Add Contact';
+                    })
+                    .catch((error) => {
+                        console.error("Error updating contact: ", error);
+                    });
+            } else {
+                push(ref(database, 'contacts'), contact)
+                    .then(() => {
+                        console.log("Contact added successfully");
+                    })
+                    .catch((error) => {
+                        console.error("Error adding contact: ", error);
+                    });
+            }
+            form.reset();
+        }
+
+        function deleteContact(key) {
+            remove(ref(database, 'contacts/' + key))
+                .then(() => console.log("Contact deleted successfully"))
+                .catch((error) => console.error("Error deleting contact: ", error));
+        }
+
+        function editContact(key) {
+            get(ref(database, 'contacts/' + key))
+                .then((snapshot) => {
+                    const contact = snapshot.val();
+                    document.getElementById('name').value = contact.name;
+                    document.getElementById('phone').value = contact.phone;
+                    document.getElementById('email').value = contact.email;
+                    document.getElementById('address').value = contact.address || '';
+                    document.getElementById('birthday').value = contact.birthday || '';
+                    
+                    editingKey = key;
+                    submitBtn.textContent = 'Update Contact';
+                })
+                .catch((error) => console.error("Error fetching contact for edit: ", error));
+        }
+
+        function searchContacts() {
+            const searchTerm = searchInput.value.toLowerCase();
+            get(ref(database, 'contacts'))
+                .then((snapshot) => {
+                    const contacts = snapshot.val();
+                    if (contacts) {
+                        const filteredContacts = Object.entries(contacts).reduce((acc, [key, contact]) => {
+                            if (contact.name.toLowerCase().includes(searchTerm) ||
+                                contact.phone.includes(searchTerm) ||
+                                contact.email.toLowerCase().includes(searchTerm)) {
+                                acc[key] = contact;
+                            }
+                            return acc;
+                        }, {});
+                        renderContacts(filteredContacts);
+                    }
+                })
+                .catch((error) => console.error("Error searching contacts: ", error));
+        }
+
+        function sortContacts() {
+            const sortBy = sortSelect.value;
+            get(ref(database, 'contacts'))
+                .then((snapshot) => {
+                    const contacts = snapshot.val();
+                    if (contacts) {
+                        const sortedContacts = Object.entries(contacts)
+                            .sort(([, a], [, b]) => a[sortBy].localeCompare(b[sortBy]))
+                            .reduce((acc, [key, value]) => {
+                                acc[key] = value;
+                                return acc;
+                            }, {});
+                        renderContacts(sortedContacts);
+                    }
+                })
+                .catch((error) => console.error("Error sorting contacts: ", error));
+        }
+
+        form.addEventListener('submit', addOrUpdateContact);
+        searchInput.addEventListener('input', searchContacts);
+        sortSelect.addEventListener('change', sortContacts);
+
+        contactList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('edit-btn')) {
+                editContact(e.target.getAttribute('data-key'));
+            } else if (e.target.classList.contains('delete-btn')) {
+                deleteContact(e.target.getAttribute('data-key'));
+            }
+        });
+
+        onValue(ref(database, 'contacts'), (snapshot) => {
+            const contacts = snapshot.val() || {};
+            renderContacts(contacts);
+        });
+    </script>
+</body>
+</html>
