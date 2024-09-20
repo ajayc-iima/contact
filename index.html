@@ -104,12 +104,9 @@
     </div>
 
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics.js";
-        import { getDatabase, ref, push, remove, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+        import { getDatabase, ref, push, remove, onValue, get, update, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
-        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA3Tb-ia3Po1BIZqZ2Jhy9pXxuwlKI874g",
             authDomain: "contact-41939.firebaseapp.com",
@@ -118,13 +115,14 @@
             messagingSenderId: "392340324726",
             appId: "1:392340324726:web:4f94aa39dc7b926a003a57",
             measurementId: "G-LJQJGKEK9M",
-            databaseURL: "https://contact-41939-default-rtdb.firebaseio.com/" // Add this line
+            databaseURL: "https://contact-41939-default-rtdb.firebaseio.com/"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
         const database = getDatabase(app);
+
+        console.log("Firebase initialized:", app);
+        console.log("Database reference:", database);
 
         const form = document.getElementById('contact-form');
         const contactList = document.getElementById('contact-list');
@@ -163,7 +161,7 @@
             };
             
             if (editingKey) {
-                update(ref(database, 'contacts/' + editingKey), contact)
+                set(ref(database, 'contacts/' + editingKey), contact)
                     .then(() => {
                         console.log("Contact updated successfully");
                         editingKey = null;
@@ -194,14 +192,18 @@
             get(ref(database, 'contacts/' + key))
                 .then((snapshot) => {
                     const contact = snapshot.val();
-                    document.getElementById('name').value = contact.name;
-                    document.getElementById('phone').value = contact.phone;
-                    document.getElementById('email').value = contact.email;
-                    document.getElementById('address').value = contact.address || '';
-                    document.getElementById('birthday').value = contact.birthday || '';
-                    
-                    editingKey = key;
-                    submitBtn.textContent = 'Update Contact';
+                    if (contact) {
+                        document.getElementById('name').value = contact.name;
+                        document.getElementById('phone').value = contact.phone;
+                        document.getElementById('email').value = contact.email;
+                        document.getElementById('address').value = contact.address || '';
+                        document.getElementById('birthday').value = contact.birthday || '';
+                        
+                        editingKey = key;
+                        submitBtn.textContent = 'Update Contact';
+                    } else {
+                        console.error("Contact not found");
+                    }
                 })
                 .catch((error) => console.error("Error fetching contact for edit: ", error));
         }
@@ -221,6 +223,9 @@
                             return acc;
                         }, {});
                         renderContacts(filteredContacts);
+                    } else {
+                        console.log("No contacts found");
+                        renderContacts({});
                     }
                 })
                 .catch((error) => console.error("Error searching contacts: ", error));
@@ -239,6 +244,9 @@
                                 return acc;
                             }, {});
                         renderContacts(sortedContacts);
+                    } else {
+                        console.log("No contacts to sort");
+                        renderContacts({});
                     }
                 })
                 .catch((error) => console.error("Error sorting contacts: ", error));
@@ -256,10 +264,21 @@
             }
         });
 
+        // Retrieve and display contacts when the page loads
         onValue(ref(database, 'contacts'), (snapshot) => {
-            const contacts = snapshot.val() || {};
-            renderContacts(contacts);
+            const contacts = snapshot.val();
+            if (contacts) {
+                console.log("Contacts retrieved:", contacts);
+                renderContacts(contacts);
+            } else {
+                console.log("No contacts found");
+                renderContacts({});
+            }
+        }, (error) => {
+            console.error("Error retrieving contacts:", error);
         });
+
+        console.log("Script fully loaded and executed");
     </script>
 </body>
 </html>
