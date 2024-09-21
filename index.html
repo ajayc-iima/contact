@@ -8,31 +8,88 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <style>
         .transition-all { transition: all 0.3s ease; }
         .hover-scale:hover { transform: scale(1.02); }
+        .sidebar { height: calc(100vh - 4rem); }
     </style>
 </head>
 <body class="bg-gradient-to-r from-blue-100 to-indigo-100 min-h-screen">
-    <div class="container mx-auto p-4 max-w-4xl">
-        <h1 class="text-4xl font-bold text-center mb-6 text-indigo-700">Mardana Contact Directory</h1>
-        
-        <div id="auth-section" class="mb-8 bg-white p-6 rounded-lg shadow-lg">
-    <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Authentication</h2>
-    <div class="flex items-center space-x-2 mb-4">
-        <i class="fas fa-lock text-indigo-500"></i>
-        <input type="password" id="security-code" placeholder="Enter security code" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
-    </div>
-    <p class="text-sm text-gray-600 mb-4">Hint: This 8-letter word was Mardana's old name, starting with "m" and ending with "a".</p>
-    <button id="auth-btn" class="w-full bg-indigo-500 text-white p-2 rounded hover:bg-indigo-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-300">
-        <i class="fas fa-sign-in-alt mr-2"></i>Authenticate
-    </button>
-</div>
+    <div id="app" class="hidden">
+        <!-- Sidebar -->
+        <div class="sidebar fixed left-0 top-0 w-64 bg-indigo-800 text-white p-4 overflow-y-auto">
+            <h1 class="text-2xl font-bold mb-6">Mardana Contacts</h1>
+            <nav>
+                <ul>
+                    <li class="mb-2">
+                        <a href="#" class="block p-2 hover:bg-indigo-700 rounded transition-all" onclick="showSection('dashboard')">
+                            <i class="fas fa-chart-line mr-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="#" class="block p-2 hover:bg-indigo-700 rounded transition-all" onclick="showSection('contacts')">
+                            <i class="fas fa-address-book mr-2"></i>Contacts
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="#" class="block p-2 hover:bg-indigo-700 rounded transition-all" onclick="showSection('add-contact')">
+                            <i class="fas fa-user-plus mr-2"></i>Add Contact
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="#" class="block p-2 hover:bg-indigo-700 rounded transition-all" onclick="showSection('import-export')">
+                            <i class="fas fa-exchange-alt mr-2"></i>Import/Export
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
 
-        <div id="main-content" class="hidden">
-            <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
-                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Add New Contact</h2>
-                <form id="contact-form">
+        <!-- Main Content -->
+        <div class="ml-64 p-4">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="hidden">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-700">Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold mb-2">Total Contacts</h3>
+                        <p id="total-contacts" class="text-3xl font-bold text-indigo-600">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold mb-2">Contacts by Group</h3>
+                        <canvas id="group-chart"></canvas>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold mb-2">Recent Activity</h3>
+                        <ul id="recent-activity" class="text-sm"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contacts Section -->
+            <section id="contacts">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-700">Contact List</h2>
+                <div class="mb-4 flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+                    <div class="flex-grow flex items-center space-x-2 bg-white rounded shadow-md">
+                        <i class="fas fa-search text-indigo-500 ml-2"></i>
+                        <input type="text" id="search" placeholder="Search contacts..." class="flex-grow p-2 bg-transparent focus:outline-none">
+                    </div>
+                    <select id="filter-group" class="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white shadow-md">
+                        <option value="">All Groups</option>
+                        <option value="Family">Family</option>
+                        <option value="Friends">Friends</option>
+                        <option value="Work">Work</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <ul id="contact-list" class="space-y-2"></ul>
+            </section>
+
+            <!-- Add Contact Section -->
+            <section id="add-contact" class="hidden">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-700">Add New Contact</h2>
+                <form id="contact-form" class="bg-white p-6 rounded-lg shadow-lg">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-user text-indigo-500"></i>
@@ -65,96 +122,112 @@
                         <i class="fas fa-plus-circle mr-2"></i>Add Contact
                     </button>
                 </form>
-            </div>
+            </section>
 
-            <div id="status-message" class="mb-4 p-2 rounded hidden"></div>
+            <!-- Import/Export Section -->
+            <section id="import-export" class="hidden">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-700">Import/Export Contacts</h2>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold mb-2">Import Contacts</h3>
+                    <input type="file" id="import-file" accept=".csv" class="mb-2">
+                    <button id="import-btn" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-all focus:outline-none focus:ring-2 focus:ring-blue-300">
+                        <i class="fas fa-file-import mr-2"></i>Import CSV
+                    </button>
 
-            <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
-                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Contact List</h2>
-                <div class="mb-4 flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
-                    <div class="flex-grow flex items-center space-x-2 bg-gray-100 rounded">
-                        <i class="fas fa-search text-indigo-500 ml-2"></i>
-                        <input type="text" id="search" placeholder="Search contacts..." class="flex-grow p-2 bg-transparent focus:outline-none">
-                    </div>
-                    <select id="filter-group" class="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        <option value="">All Groups</option>
-                        <option value="Family">Family</option>
-                        <option value="Friends">Friends</option>
-                        <option value="Work">Work</option>
-                        <option value="Other">Other</option>
-                    </select>
+                    <h3 class="text-lg font-semibold mt-6 mb-2">Export Contacts</h3>
+                    <button id="export-btn" class="bg-purple-500 text-white p-2 rounded hover:bg-purple-600 transition-all focus:outline-none focus:ring-2 focus:ring-purple-300">
+                        <i class="fas fa-file-export mr-2"></i>Export to CSV
+                    </button>
                 </div>
-                <ul id="contact-list" class="space-y-2"></ul>
+            </section>
+
+            <div id="status-message" class="mt-4 p-2 rounded hidden"></div>
+        </div>
+    </div>
+
+    <!-- Authentication Section -->
+    <div id="auth-section" class="container mx-auto p-4 max-w-md">
+        <h1 class="text-4xl font-bold text-center mb-6 text-indigo-700">Mardana Contact Directory</h1>
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Authentication</h2>
+            <div class="flex items-center space-x-2 mb-4">
+                <i class="fas fa-lock text-indigo-500"></i>
+                <input type="password" id="security-code" placeholder="Enter security code" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+            </div>
+            <p class="text-sm text-gray-600 mb-4">Hint: This 8-letter word was Mardana's old name, starting with "m" and ending with "a".</p>
+            <button id="auth-btn" class="w-full bg-indigo-500 text-white p-2 rounded hover:bg-indigo-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                <i class="fas fa-sign-in-alt mr-2"></i>Authenticate
+            </button>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h2 class="text-2xl font-semibold mb-4 text-red-600">Confirm Deletion</h2>
+            <p class="mb-4">Please enter the security code to delete this contact:</p>
+            <div class="flex items-center space-x-2 mb-4">
+                <i class="fas fa-key text-red-500"></i>
+                <input type="password" id="delete-security-code" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-red-300" placeholder="Enter security code">
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button id="cancel-delete" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button id="confirm-delete" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all focus:outline-none focus:ring-2 focus:ring-red-300">
+                    <i class="fas fa-trash-alt mr-2"></i>Delete
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- Delete Confirmation Modal -->
-        <div id="delete-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
-            <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-                <h2 class="text-2xl font-semibold mb-4 text-red-600">Confirm Deletion</h2>
-                <p class="mb-4">Please enter the security code to delete this contact:</p>
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+            <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Edit Contact</h2>
+            <form id="edit-form">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-user text-indigo-500"></i>
+                        <input type="text" id="edit-name" placeholder="Name" required class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-phone text-indigo-500"></i>
+                        <input type="tel" id="edit-phone" placeholder="Phone" required class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-envelope text-indigo-500"></i>
+                        <input type="email" id="edit-email" placeholder="Email" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-users text-indigo-500"></i>
+                        <select id="edit-group" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                            <option value="">Select Group</option>
+                            <option value="Family">Family</option>
+                            <option value="Friends">Friends</option>
+                            <option value="Work">
+<option value="Work">Work</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2 md:col-span-2">
+                        <i class="fab fa-linkedin text-indigo-500"></i>
+                        <input type="url" id="edit-linkedin" placeholder="LinkedIn Profile" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                    </div>
+                </div>
                 <div class="flex items-center space-x-2 mb-4">
-                    <i class="fas fa-key text-red-500"></i>
-                    <input type="password" id="delete-security-code" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-red-300" placeholder="Enter security code">
+                    <i class="fas fa-key text-indigo-500"></i>
+                    <input type="password" id="edit-security-code" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="Enter security code to confirm edit">
                 </div>
                 <div class="flex justify-end space-x-2">
-                    <button id="cancel-delete" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400">
+                    <button type="button" id="cancel-edit" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400">
                         <i class="fas fa-times mr-2"></i>Cancel
                     </button>
-                    <button id="confirm-delete" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all focus:outline-none focus:ring-2 focus:ring-red-300">
-                        <i class="fas fa-trash-alt mr-2"></i>Delete
+                    <button type="submit" id="confirm-edit" class="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        <i class="fas fa-save mr-2"></i>Save Changes
                     </button>
                 </div>
-            </div>
-        </div>
-
-        <!-- Edit Modal -->
-        <div id="edit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
-            <div class="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
-                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Edit Contact</h2>
-                <form id="edit-form">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div class="flex items-center space-x-2">
-                            <i class="fas fa-user text-indigo-500"></i>
-                            <input type="text" id="edit-name" placeholder="Name" required class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <i class="fas fa-phone text-indigo-500"></i>
-                            <input type="tel" id="edit-phone" placeholder="Phone" required class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <i class="fas fa-envelope text-indigo-500"></i>
-                            <input type="email" id="edit-email" placeholder="Email" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <i class="fas fa-users text-indigo-500"></i>
-                            <select id="edit-group" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                                <option value="">Select Group</option>
-                                <option value="Family">Family</option>
-                                <option value="Friends">Friends</option>
-                                <option value="Work">Work</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center space-x-2 md:col-span-2">
-                            <i class="fab fa-linkedin text-indigo-500"></i>
-                            <input type="url" id="edit-linkedin" placeholder="LinkedIn Profile" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-2 mb-4">
-                        <i class="fas fa-key text-indigo-500"></i>
-                        <input type="password" id="edit-security-code" class="flex-grow p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="Enter security code to confirm edit">
-                    </div>
-                    <div class="flex justify-end space-x-2">
-                        <button type="button" id="cancel-edit" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400">
-                            <i class="fas fa-times mr-2"></i>Cancel
-                        </button>
-                        <button type="submit" id="confirm-edit" class="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                            <i class="fas fa-save mr-2"></i>Save Changes
-                        </button>
-                    </div>
-                </form>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -175,7 +248,7 @@
         const contactsRef = database.ref('contacts');
 
         const authSection = document.getElementById('auth-section');
-        const mainContent = document.getElementById('main-content');
+        const app = document.getElementById('app');
         const authBtn = document.getElementById('auth-btn');
         const securityCodeInput = document.getElementById('security-code');
         const form = document.getElementById('contact-form');
@@ -191,6 +264,8 @@
         const editForm = document.getElementById('edit-form');
         const editSecurityCodeInput = document.getElementById('edit-security-code');
         const cancelEditBtn = document.getElementById('cancel-edit');
+        const importBtn = document.getElementById('import-btn');
+        const exportBtn = document.getElementById('export-btn');
 
         const SECURITY_CODE = 'mayurana';
         const DELETE_SECURITY_CODE = 'R@j@@2024';
@@ -199,7 +274,7 @@
 
         function showMessage(message, isError = false) {
             statusMessage.textContent = message;
-            statusMessage.className = `mb-4 p-2 rounded ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+            statusMessage.className = `mt-4 p-2 rounded ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
             statusMessage.classList.remove('hidden');
             setTimeout(() => {
                 statusMessage.classList.add('hidden');
@@ -209,176 +284,298 @@
         authBtn.addEventListener('click', () => {
             if (securityCodeInput.value === SECURITY_CODE) {
                 authSection.classList.add('hidden');
-                mainContent.classList.remove('hidden');
+                app.classList.remove('hidden');
+                loadDashboard();
             } else {
                 showMessage('Incorrect security code', true);
             }
         });
 
+        function showSection(sectionId) {
+            document.querySelectorAll('section').forEach(section => section.classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+            if (sectionId === 'dashboard') {
+                loadDashboard();
+            }
+        }
+
+        function loadDashboard() {
+            contactsRef.once('value', (snapshot) => {
+                const contacts = snapshot.val();
+                updateTotalContacts(contacts);
+                updateGroupChart(contacts);
+                updateRecentActivity(contacts);
+            });
+        }
+
+        function updateTotalContacts(contacts) {
+            const totalContacts = contacts ? Object.keys(contacts).length : 0;
+            document.getElementById('total-contacts').textContent = totalContacts;
+        }
+
+        function updateGroupChart(contacts) {
+            const groupCounts = {};
+            if (contacts) {
+                Object.values(contacts).forEach(contact => {
+                    const group = contact.group || 'No Group';
+                    groupCounts[group] = (groupCounts[group] || 0) + 1;
+                });
+            }
+
+            const ctx = document.getElementById('group-chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(groupCounts),
+                    datasets: [{
+                        data: Object.values(groupCounts),
+                        backgroundColor: ['#4C51BF', '#ED64A6', '#48BB78', '#ECC94B', '#9F7AEA']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function updateRecentActivity(contacts) {
+            const recentActivity = document.getElementById('recent-activity');
+            recentActivity.innerHTML = '';
+            if (contacts) {
+                const sortedContacts = Object.entries(contacts).sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
+                sortedContacts.slice(0, 5).forEach(([key, contact]) => {
+                    const li = document.createElement('li');
+                    li.textContent = `${contact.name} was added on ${new Date(contact.timestamp).toLocaleDateString()}`;
+                    recentActivity.appendChild(li);
+                });
+            }
+        }
+
         form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const contact = {
-        name: document.getElementById('name').value,
-        phone: document.getElementById('phone').value,
-        email: document.getElementById('email').value,
-        group: document.getElementById('group').value,
-        linkedin: document.getElementById('linkedin').value,
-        timestamp: new Date().toISOString()
-    };
+            e.preventDefault();
+            const contact = {
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                group: document.getElementById('group').value,
+                linkedin: document.getElementById('linkedin').value,
+                timestamp: new Date().toISOString()
+            };
 
-    contactsRef.push(contact)
-        .then(() => {
-            showMessage("Contact added successfully!");
-            form.reset();
-        })
-        .catch((error) => {
-            showMessage("Error adding contact: " + error.message, true);
+            contactsRef.push(contact)
+                .then(() => {
+                    showMessage("Contact added successfully!");
+                    form.reset();
+                    loadDashboard();
+                })
+                .catch((error) => {
+                    showMessage("Error adding contact: " + error.message, true);
+                });
         });
-});
 
-function renderContacts(contacts) {
-    contactList.innerHTML = '';
-    if (contacts) {
-        Object.entries(contacts).forEach(([key, contact]) => {
-            const li = document.createElement('li');
-            li.className = 'bg-white p-4 rounded shadow hover:shadow-md transition-all hover-scale';
-            li.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <div>
-                        <strong class="text-lg">${contact.name}</strong>
-                        <span class="ml-2 px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs">${contact.group || 'No Group'}</span><br>
-                        <span class="text-gray-600"><i class="fas fa-phone mr-2"></i>${contact.phone}</span><br>
-                        ${contact.email ? `<span class="text-gray-600"><i class="fas fa-envelope mr-2"></i>${contact.email}</span><br>` : ''}
-                        ${contact.linkedin ? `<a href="${contact.linkedin}" target="_blank" class="text-blue-500 hover:text-blue-700"><i class="fab fa-linkedin mr-2"></i>LinkedIn Profile</a>` : ''}
-                    </div>
-                    <div>
-                        <button class="edit-btn text-blue-500 hover:text-blue-700 mr-2" data-key="${key}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="delete-btn text-red-500 hover:text-red-700" data-key="${key}">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            contactList.appendChild(li);
+        function renderContacts(contacts) {
+            contactList.innerHTML = '';
+            if (contacts) {
+                Object.entries(contacts).forEach(([key, contact]) => {
+                    const li = document.createElement('li');
+                    li.className = 'bg-white p-4 rounded shadow hover:shadow-md transition-all hover-scale';
+                    li.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <strong class="text-lg">${contact.name}</strong>
+                                <span class="ml-2 px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs">${contact.group || 'No Group'}</span><br>
+                                <span class="text-gray-600"><i class="fas fa-phone mr-2"></i>${contact.phone}</span><br>
+                                ${contact.email ? `<span class="text-gray-600"><i class="fas fa-envelope mr-2"></i>${contact.email}</span><br>` : ''}
+                                ${contact.linkedin ? `<a href="${contact.linkedin}" target="_blank" class="text-blue-500 hover:text-blue-700"><i class="fab fa-linkedin mr-2"></i>LinkedIn Profile</a>` : ''}
+                            </div>
+                            <div>
+                                <button class="edit-btn text-blue-500 hover:text-blue-700 mr-2" data-key="${key}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-btn text-red-500 hover:text-red-700" data-key="${key}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    contactList.appendChild(li);
+                });
+            } else {
+                contactList.innerHTML = '<li class="text-center text-gray-500">No contacts found</li>';
+            }
+        }
+
+        contactList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn') || e.target.closest('.delete-btn')) {
+                currentDeleteKey = e.target.closest('.delete-btn').getAttribute('data-key');
+                deleteModal.classList.remove('hidden');
+                deleteModal.classList.add('flex');
+                deleteSecurityCodeInput.value = '';
+            } else if (e.target.classList.contains('edit-btn') || e.target.closest('.edit-btn')) {
+                currentEditKey = e.target.closest('.edit-btn').getAttribute('data-key');
+                openEditModal(currentEditKey);
+            }
         });
-    } else {
-        contactList.innerHTML = '<li class="text-center text-gray-500">No contacts found</li>';
-    }
-}
 
-contactList.addEventListener('click', (e) => {
-    if (e.target.classList.contains('delete-btn') || e.target.closest('.delete-btn')) {
-        currentDeleteKey = e.target.closest('.delete-btn').getAttribute('data-key');
-        deleteModal.classList.remove('hidden');
-        deleteModal.classList.add('flex');
-        deleteSecurityCodeInput.value = '';
-    } else if (e.target.classList.contains('edit-btn') || e.target.closest('.edit-btn')) {
-        currentEditKey = e.target.closest('.edit-btn').getAttribute('data-key');
-        openEditModal(currentEditKey);
-    }
-});
-
-function openEditModal(key) {
-    database.ref('contacts/' + key).once('value', (snapshot) => {
-        const contact = snapshot.val();
-        document.getElementById('edit-name').value = contact.name;
-        document.getElementById('edit-phone').value = contact.phone;
-        document.getElementById('edit-email').value = contact.email || '';
-        document.getElementById('edit-group').value = contact.group || '';
-        document.getElementById('edit-linkedin').value = contact.linkedin || '';
-        editModal.classList.remove('hidden');
-        editModal.classList.add('flex');
-    });
-}
-
-editForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (editSecurityCodeInput.value === DELETE_SECURITY_CODE) {
-        const updatedContact = {
-            name: document.getElementById('edit-name').value,
-            phone: document.getElementById('edit-phone').value,
-            email: document.getElementById('edit-email').value,
-            group: document.getElementById('edit-group').value,
-            linkedin: document.getElementById('edit-linkedin').value,
-            timestamp: new Date().toISOString()
-        };
-
-        database.ref('contacts/' + currentEditKey).update(updatedContact)
-            .then(() => {
-                showMessage("Contact updated successfully!");
-                editModal.classList.add('hidden');
-                editModal.classList.remove('flex');
-                currentEditKey = null;
-            })
-            .catch((error) => {
-                showMessage("Error updating contact: " + error.message, true);
+        function openEditModal(key) {
+            database.ref('contacts/' + key).once('value', (snapshot) => {
+                const contact = snapshot.val();
+                document.getElementById('edit-name').value = contact.name;
+                document.getElementById('edit-phone').value = contact.phone;
+                document.getElementById('edit-email').value = contact.email || '';
+                document.getElementById('edit-group').value = contact.group || '';
+                document.getElementById('edit-linkedin').value = contact.linkedin || '';
+                editModal.classList.remove('hidden');
+                editModal.classList.add('flex');
             });
-    } else {
-        showMessage("Incorrect security code", true);
-    }
-});
+        }
 
-cancelDeleteBtn.addEventListener('click', () => {
-    deleteModal.classList.add('hidden');
-    deleteModal.classList.remove('flex');
-    currentDeleteKey = null;
-});
+        editForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (editSecurityCodeInput.value === DELETE_SECURITY_CODE) {
+                const updatedContact = {
+                    name: document.getElementById('edit-name').value,
+                    phone: document.getElementById('edit-phone').value,
+                    email: document.getElementById('edit-email').value,
+                    group: document.getElementById('edit-group').value,
+                    linkedin: document.getElementById('edit-linkedin').value,
+                    timestamp: new Date().toISOString()
+                };
 
-confirmDeleteBtn.addEventListener('click', () => {
-    if (deleteSecurityCodeInput.value === DELETE_SECURITY_CODE) {
-        database.ref('contacts/' + currentDeleteKey).remove()
-            .then(() => {
-                showMessage("Contact deleted successfully!");
-                deleteModal.classList.add('hidden');
-                deleteModal.classList.remove('flex');
-                currentDeleteKey = null;
-            })
-            .catch((error) => {
-                showMessage("Error deleting contact: " + error.message, true);
+                database.ref('contacts/' + currentEditKey).update(updatedContact)
+                    .then(() => {
+                        showMessage("Contact updated successfully!");
+                        editModal.classList.add('hidden');
+                        editModal.classList.remove('flex');
+                        currentEditKey = null;
+                        loadDashboard();
+                    })
+                    .catch((error) => {
+                        showMessage("Error updating contact: " + error.message, true);
+                    });
+            } else {
+                showMessage("Incorrect security code", true);
+            }
+        });
+
+        cancelDeleteBtn.addEventListener('click', () => {
+            deleteModal.classList.add('hidden');
+            deleteModal.classList.remove('flex');
+            currentDeleteKey = null;
+        });
+
+        confirmDeleteBtn.addEventListener('click', () => {
+            if (deleteSecurityCodeInput.value === DELETE_SECURITY_CODE) {
+                database.ref('contacts/' + currentDeleteKey).remove()
+                    .then(() => {
+                        showMessage("Contact deleted successfully!");
+                        deleteModal.classList.add('hidden');
+                        deleteModal.classList.remove('flex');
+                        currentDeleteKey = null;
+                        loadDashboard();
+                    })
+                    .catch((error) => {
+                        showMessage("Error deleting contact: " + error.message, true);
+                    });
+            } else {
+                showMessage("Incorrect deletion security code", true);
+            }
+        });
+
+        cancelEditBtn.addEventListener('click', () => {
+            editModal.classList.add('hidden');
+            editModal.classList.remove('flex');
+            currentEditKey = null;
+        });
+
+        function filterContacts() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const groupFilter = filterGroup.value;
+
+            contactsRef.once('value', (snapshot) => {
+                const contacts = snapshot.val();
+                const filteredContacts = Object.fromEntries(
+                    Object.entries(contacts).filter(([_, contact]) => 
+                        (contact.name.toLowerCase().includes(searchTerm) || 
+                         contact.phone.includes(searchTerm) ||
+                         (contact.email && contact.email.toLowerCase().includes(searchTerm))) &&
+                        (!groupFilter || contact.group === groupFilter)
+                    )
+                );
+                renderContacts(filteredContacts);
             });
-    } else {
-        showMessage("Incorrect deletion security code", true);
-    }
-});
+        }
 
-cancelEditBtn.addEventListener('click', () => {
-    editModal.classList.add('hidden');
-    editModal.classList.remove('flex');
-    currentEditKey = null;
-});
+        searchInput.addEventListener('input', filterContacts);
+        filterGroup.addEventListener('change', filterContacts);
 
-function filterContacts() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const groupFilter = filterGroup.value;
+        contactsRef.on('value', (snapshot) => {
+            const contacts = snapshot.val();
+            renderContacts(contacts);
+        }, (error) => {
+            showMessage("Error fetching contacts: " + error.message, true);
+        });
 
+        importBtn.addEventListener('click', () => {
+            const fileInput = document.getElementById('import-file');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n');
+                    lines.shift(); // Remove header row
+                    lines.forEach(line => {
+                        const [name, phone, email, group, linkedin] = line.split(',');
+                        if (name && phone) {
+                            const contact = {
+                                name: name.trim(),
+                                phone: phone.trim(),
+                                email: email ? email.trim() : '',
+                                group: group ? group.trim() : '',
+                                linkedin: linkedin ? linkedin.trim() : '',
+                                timestamp: new Date().toISOString()
+                            };
+                            contactsRef.push(contact);
+                        }
+                    });
+                    showMessage("Contacts imported successfully!");
+                    fileInput.value = '';
+                    loadDashboard();
+                };
+                reader.readAsText(file);
+            } else {
+                showMessage("Please select a CSV file to import", true);
+            }
+        });
+
+
+exportBtn.addEventListener('click', () => {
     contactsRef.once('value', (snapshot) => {
         const contacts = snapshot.val();
-        const filteredContacts = Object.fromEntries(
-            Object.entries(contacts).filter(([_, contact]) => 
-                (contact.name.toLowerCase().includes(searchTerm) || 
-                 contact.phone.includes(searchTerm) ||
-                 (contact.email && contact.email.toLowerCase().includes(searchTerm))) &&
-                (!groupFilter || contact.group === groupFilter)
-            )
-        );
-        renderContacts(filteredContacts);
+        if (contacts) {
+            let csv = 'Name,Phone,Email,Group,LinkedIn\n';
+            Object.values(contacts).forEach(contact => {
+                csv += `${contact.name},${contact.phone},${contact.email || ''},${contact.group || ''},${contact.linkedin || ''}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "contacts.csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            showMessage("Contacts exported successfully!");
+        } else {
+            showMessage("No contacts to export", true);
+        }
     });
-}
-
-searchInput.addEventListener('input', filterContacts);
-filterGroup.addEventListener('change', filterContacts);
-
-contactsRef.on('value', (snapshot) => {
-    const contacts = snapshot.val();
-    renderContacts(contacts);
-}, (error) => {
-    showMessage("Error fetching contacts: " + error.message, true);
 });
-
-
-
 </script>
 </body>
 </html>
