@@ -1,18 +1,22 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced User-Friendly Contact Directory</title>
+    <title>Village Mardana Contact Directory</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <style>
-        .transition-all { transition: all 0.3s ease; }
-        .hover-scale:hover { transform: scale(1.02); }
-        .sidebar { height: calc(100vh - 4rem); }
+    .transition-all { transition: all 0.3s ease; }
+    .hover-scale:hover { transform: scale(1.02); }
+    .sidebar { height: calc(100vh - 4rem); overflow-y: auto; }
+    .sidebar::-webkit-scrollbar { width: 6px; }
+    .sidebar::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+    .active-link { background-color: rgba(255, 255, 255, 0.1); }
     </style>
 </head>
 <body class="bg-gradient-to-r from-blue-100 to-indigo-100 min-h-screen">
@@ -22,11 +26,6 @@
             <h1 class="text-2xl font-bold mb-6">Mardana Contacts</h1>
             <nav>
                 <ul>
-                    <li class="mb-2">
-                        <a href="#" class="block p-2 hover:bg-indigo-700 rounded transition-all" onclick="showSection('dashboard')">
-                            <i class="fas fa-chart-line mr-2"></i>Dashboard
-                        </a>
-                    </li>
                     <li class="mb-2">
                         <a href="#" class="block p-2 hover:bg-indigo-700 rounded transition-all" onclick="showSection('contacts')">
                             <i class="fas fa-address-book mr-2"></i>Contacts
@@ -48,24 +47,6 @@
 
         <!-- Main Content -->
         <div class="ml-64 p-4">
-            <!-- Dashboard Section -->
-            <section id="dashboard" class="hidden">
-                <h2 class="text-2xl font-semibold mb-4 text-indigo-700">Dashboard</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-white p-4 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold mb-2">Total Contacts</h3>
-                        <p id="total-contacts" class="text-3xl font-bold text-indigo-600">0</p>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold mb-2">Contacts by Group</h3>
-                        <canvas id="group-chart"></canvas>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold mb-2">Recent Activity</h3>
-                        <ul id="recent-activity" class="text-sm"></ul>
-                    </div>
-                </div>
-            </section>
 
             <!-- Contacts Section -->
             <section id="contacts">
