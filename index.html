@@ -1,14 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Village Mardana Contact Directory</title>
+    <title>Village Mardana - Official Website</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
@@ -16,536 +14,158 @@
             font-family: 'Poppins', sans-serif;
         }
 
-        .transition-all { transition: all 0.3s ease; }
-        .hover-scale:hover { transform: scale(1.02); }
-        .sidebar { height: calc(100vh - 4rem); overflow-y: auto; }
-        .sidebar::-webkit-scrollbar { width: 6px; }
-        .sidebar::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 3px; }
-        .active-link { background-color: rgba(255, 255, 255, 0.1); }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .hero-section {
+            background-image: url('/api/placeholder/1920/600');
+            background-size: cover;
+            background-position: center;
         }
 
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out;
+        .tab-content {
+            display: none;
         }
 
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-            }
-            .main-content {
-                margin-left: 0;
-            }
+        .tab-content.active {
+            display: block;
+        }
+
+        #contact-directory, #marketplace {
+            height: 100vh;
+            width: 100%;
+            border: none;
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 min-h-screen">
-    <div id="app" class="hidden">
-        <!-- Sidebar -->
-        <div class="sidebar fixed left-0 top-0 w-64 bg-indigo-800 text-white p-4 overflow-y-auto md:block" id="sidebar">
-            <h1 class="text-2xl font-bold mb-6">Mardana Contacts</h1>
-            <nav>
-                <ul>
-                    <li class="mb-2">
-                        <a href="#" class="block p-2 hover:bg-indigo-700 rounded transition-all" onclick="showSection('contacts')">
-                            <i class="fas fa-address-book mr-2"></i>Contacts
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="#" class="block p-2 hover:bg-indigo-700 rounded transition-all" onclick="showSection('add-contact')">
-                            <i class="fas fa-user-plus mr-2"></i>Add Contact
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="#" class="block p-2 hover:bg-indigo-700 rounded transition-all" onclick="showSection('import-export')">
-                            <i class="fas fa-exchange-alt mr-2"></i>Import/Export
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
+<body class="bg-gray-50">
 
-        <!-- Main Content -->
-        <div class="main-content ml-0 md:ml-64 p-4 transition-all">
-            <button id="toggle-sidebar" class="md:hidden bg-indigo-800 text-white p-2 rounded mb-4">
-                <i class="fas fa-bars"></i>
-            </button>
-
-            <!-- Contacts Section -->
-            <section id="contacts" class="animate-fade-in">
-                <h2 class="text-3xl font-semibold mb-6 text-indigo-800">Contact List</h2>
-                <div class="mb-6 flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
-                    <div class="flex-grow flex items-center space-x-2 bg-white rounded-lg shadow-md">
-                        <i class="fas fa-search text-indigo-500 ml-3"></i>
-                        <input type="text" id="search" placeholder="Search contacts..." class="flex-grow p-3 bg-transparent focus:outline-none">
-                    </div>
-                    <select id="filter-group" class="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white shadow-md">
-                        <option value="">All Groups</option>
-                        <option value="Family">Family</option>
-                        <option value="Friends">Friends</option>
-                        <option value="Work">Work</option>
-                        <option value="Other">Other</option>
-                    </select>
+    <!-- Navigation -->
+    <nav class="bg-green-800 text-white">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <img src="/api/placeholder/50/50" alt="Mardana Logo" class="h-12 w-12 rounded-full mr-3">
+                    <h1 class="text-2xl font-bold">Village Mardana</h1>
                 </div>
-                <ul id="contact-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></ul>
-            </section>
-
-            <!-- Add Contact Section -->
-            <section id="add-contact" class="hidden animate-fade-in">
-                <h2 class="text-3xl font-semibold mb-6 text-indigo-800">Add New Contact</h2>
-                <form id="contact-form" class="bg-white p-6 rounded-lg shadow-lg">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="flex items-center space-x-2">
-                            <i class="fas fa-user text-indigo-500"></i>
-                            <input type="text" id="name" placeholder="Name" required class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <i class="fas fa-phone text-indigo-500"></i>
-                            <input type="tel" id="phone" placeholder="Phone" required class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <i class="fas fa-envelope text-indigo-500"></i>
-                            <input type="email" id="email" placeholder="Email" class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <i class="fas fa-users text-indigo-500"></i>
-                            <select id="group" class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                                <option value="">Select Group</option>
-                                <option value="Family">Family</option>
-                                <option value="Friends">Friends</option>
-                                <option value="Work">Work</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center space-x-2 md:col-span-2">
-                            <i class="fab fa-linkedin text-indigo-500"></i>
-                            <input type="url" id="linkedin" placeholder="LinkedIn Profile" class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition-all mt-6 focus:outline-none focus:ring-2 focus:ring-green-300">
-                        <i class="fas fa-plus-circle mr-2"></i>Add Contact
-                    </button>
-                </form>
-            </section>
-
-            <!-- Import/Export Section -->
-            <section id="import-export" class="hidden animate-fade-in">
-                <h2 class="text-3xl font-semibold mb-6 text-indigo-800">Import/Export Contacts</h2>
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-xl font-semibold mb-4">Import Contacts</h3>
-                    <input type="file" id="import-file" accept=".csv" class="mb-4">
-                    <button id="import-btn" class="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition-all focus:outline-none focus:ring-2 focus:ring-blue-300">
-                        <i class="fas fa-file-import mr-2"></i>Import CSV
-                    </button>
-
-                    <h3 class="text-xl font-semibold mt-8 mb-4">Export Contacts</h3>
-                    <button id="export-btn" class="bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 transition-all focus:outline-none focus:ring-2 focus:ring-purple-300">
-                        <i class="fas fa-file-export mr-2"></i>Export to CSV
-                    </button>
+                <div class="hidden md:flex space-x-6">
+                    <button onclick="showTab('home')" class="hover:text-green-200 transition-colors">Home</button>
+                    <button onclick="showTab('about')" class="hover:text-green-200 transition-colors">About</button>
+                    <button onclick="showTab('facilities')" class="hover:text-green-200 transition-colors">Facilities</button>
+                    <button onclick="showTab('gallery')" class="hover:text-green-200 transition-colors">Gallery</button>
+                    <button onclick="showTab('contact-directory')" class="hover:text-green-200 transition-colors">Contact Directory</button>
+                    <button onclick="showTab('marketplace')" class="hover:text-green-200 transition-colors">Marketplace</button>
                 </div>
-            </section>
-
-            <div id="status-message" class="mt-6 p-4 rounded-lg hidden"></div>
-        </div>
-    </div>
-
-    <!-- Authentication Section -->
-    <div id="auth-section" class="container mx-auto p-4 max-w-md">
-        <h1 class="text-4xl font-bold text-center mb-8 text-indigo-800">Mardana Contact Directory</h1>
-        <div class="bg-white p-8 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-semibold mb-6 text-indigo-700">Authentication</h2>
-            <div class="flex items-center space-x-2 mb-6">
-                <i class="fas fa-lock text-indigo-500"></i>
-                <input type="password" id="security-code" placeholder="Enter security code" class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
-            </div>
-            <p class="text-sm text-gray-600 mb-6">Hint: This 8-letter word was Mardana's old name, starting with "m" and ending with "a".</p>
-            <button id="auth-btn" class="w-full bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                <i class="fas fa-sign-in-alt mr-2"></i>Authenticate
-            </button>
-        </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div id="delete-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full m-4">
-            <h2 class="text-2xl font-semibold mb-6 text-red-600">Confirm Deletion</h2>
-            <p class="mb-6">Please enter the security code to delete this contact:</p>
-            <div class="flex items-center space-x-2 mb-6">
-                <i class="fas fa-key text-red-500"></i>
-                <input type="password" id="delete-security-code" class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300" placeholder="Enter security code">
-            </div>
-            <div class="flex justify-end space-x-4">
-                <button id="cancel-delete" class="px-6 py-3 bg-gray-300 rounded-lg hover:bg-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400">
-                    <i class="fas fa-times mr-2"></i>Cancel
-                </button>
-                <button id="confirm-delete" class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all focus:outline-none focus:ring-2 focus:ring-red-300">
-                    <i class="fas fa-trash-alt mr-2"></i>Delete
+                <button id="mobile-menu-button" class="md:hidden">
+                    <i class="fas fa-bars text-2xl"></i>
                 </button>
             </div>
         </div>
-    </div>
 
-    <!-- Edit Modal -->
-    <div id="edit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-lg max-w-2xl w-full m-4">
-            <h2 class="text-2xl font-semibold mb-6 text-indigo-700">Edit Contact</h2>
-            <form id="edit-form">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-user text-indigo-500"></i>
-                        <input type="text" id="edit-name" placeholder="Name" required class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-phone text-indigo-500"></i>
-                        <input type="tel" id="edit-phone" placeholder="Phone" required class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-envelope text-indigo-500"></i>
-                        <input type="email" id="edit-email" placeholder="Email" class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-users text-indigo-500"></i>
-                        <select id="edit-group" class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                            <option value="">Select Group</option>
-                            <option value="Family">Family</option>
-                            <option value="Friends">Friends</option>
-                            <option value="Work">Work</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="flex items-center space-x-2 md:col-span-2">
-                        <i class="fab fa-linkedin text-indigo-500"></i>
-                        <input type="url" id="edit-linkedin" placeholder="LinkedIn Profile" class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                    </div>
-                </div>
-                <div class="flex items-center space-x-2 mb-6">
-                    <i class="fas fa-key text-indigo-500"></i>
-                    <input type="password" id="edit-security-code" class="flex-grow p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="Enter security code to confirm edit">
-                </div>
-                <div class="flex justify-end space-x-4">
-                    <button type="button" id="cancel-edit" class="px-6 py-3 bg-gray-300 rounded-lg hover:bg-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400">
-                        <i class="fas fa-times mr-2"></i>Cancel
-                    </button>
-                    <button type="submit" id="confirm-edit" class="px-6 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        <i class="fas fa-save mr-2"></i>Save Changes
-                    </button>
-                </div>
-            </form>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden">
+            <div class="px-4 py-3 space-y-3">
+                <button onclick="showTab('home')" class="block w-full text-left px-3 py-2 hover:bg-green-700">Home</button>
+                <button onclick="showTab('about')" class="block w-full text-left px-3 py-2 hover:bg-green-700">About</button>
+                <button onclick="showTab('facilities')" class="block w-full text-left px-3 py-2 hover:bg-green-700">Facilities</button>
+                <button onclick="showTab('gallery')" class="block w-full text-left px-3 py-2 hover:bg-green-700">Gallery</button>
+                <button onclick="showTab('contact-directory')" class="block w-full text-left px-3 py-2 hover:bg-green-700">Contact Directory</button>
+                <button onclick="showTab('marketplace')" class="block w-full text-left px-3 py-2 hover:bg-green-700">Marketplace</button>
+            </div>
         </div>
-    </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Home Tab -->
+        <section id="home" class="tab-content active">
+            <div class="hero-section h-96 flex items-center justify-center text-white">
+                <div class="text-center">
+                    <h1 class="text-6xl font-bold mb-4">नमस्ते !</h1>
+                    <h2 class="text-4xl font-bold mb-4">ग्राम मर्दाना</h2>
+                    <p class="text-xl">परंपरा और प्रगति का मिलन</p>
+                </div>
+            </div>
+
+            <!-- Hindi Content Section -->
+            <div class="container mx-auto px-4 py-12">
+                <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8 mb-12">
+                    <div class="prose lg:prose-xl">
+                        <p class="text-lg leading-relaxed mb-6">
+                            <strong>ग्राम मर्दाना</strong> भारत में नर्मदा नदी के तट पर स्थित मध्य प्रदेश राज्य का एक छोटा और सुंदर गाँव है। यह गाँव <strong>निमाड़</strong> क्षेत्र के अंतर्गत आता है।
+                        </p>
+                        <p class="text-lg leading-relaxed mb-6">
+                            बस स्टैंड से एक सीधी पक्की मुख्य गली आपको चौराहों, अनुग्रहपूर्ण आँगन और झरोके वाले छज्जों से होते हुए नर्मदा नदी के तट की ओर ले जाती है।
+                        </p>
+                        <p class="text-lg leading-relaxed mb-6">
+                            <strong>ग्राम मर्दाना</strong> मध्य प्रदेश के पश्चिम निमाड़ जिले के <strong>सनावद</strong> तहसील में स्थित है।
+                        </p>
+                        <div class="mt-8 text-center">
+                            <a href="#" class="text-blue-600 hover:text-blue-800">[Read More on wiki]</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Volunteer Call to Action -->
+                <div class="bg-green-100 rounded-lg p-8 text-center">
+                    <h3 class="text-2xl font-bold text-green-800 mb-4">Join Our Community!</h3>
+                    <p class="text-lg text-green-700 mb-6">
+                        We are looking for passionate volunteers from nearby schools, institutions, and companies to join us!
+                    </p>
+                    <button class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors">
+                        Volunteer Now
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Tab -->
+<section id="about" class="tab-content"> <div class="container mx-auto px-4 py-12"> <h2 class="text-3xl font-bold mb-8 text-center">मरदाना गाँव के बारे में</h2> <div class="grid grid-cols-1 md:grid-cols-2 gap-8"> <div> <img src="/api/placeholder/600/400" alt="मरदाना गाँव" class="rounded-lg shadow-md w-full"> </div> <div> <h3 class="text-2xl font-semibold mb-4">हमारा इतिहास</h3> <p class="text-gray-600 mb-4">मरदाना गाँव का इतिहास बहुत पुराना है। यह गाँव "सवत 532 वैशाख शुदि 3 गुरुवार, कृष्ण पक्ष" में सरधवज के पुत्र मयूरध्वज द्वारा स्थापित किया गया था। यहाँ एक 1500 वर्ष पुराना राजा मोहरवाज का किला भी है।</p> <h3 class="text-2xl font-semibold mb-4">जनसांख्यिकी</h3> <p class="text-gray-600 mb-4">2011 की जनगणना के अनुसार, हमारे गाँव में 5,001 निवासी हैं, जिनमें 2,511 पुरुष और 2,490 महिलाएँ हैं। यहाँ कृषि और आधुनिक व्यवसायों का संतुलन है।</p> <h3 class="text-2xl font-semibold mb-4">स्थान और संस्कृति</h3> <p class="text-gray-600">मरदाना नर्मदा नदी के तट पर स्थित है और निमाड़ क्षेत्र का हिस्सा है। यह गाँव अपने गंगौर उत्सव और पारंपरिक धनियेर नृत्य के लिए प्रसिद्ध है। यहाँ के कई घर नीले रंग में रंगे हुए हैं, जो निमाड़ की परंपरागत शैली है।</p> </div> </div> </div> </section>
+
+        <!-- Facilities Tab -->
+       <!-- Facilities Tab --> 
+        <section id="facilities" class="tab-content"> <div class="container mx-auto px-4 py-12"> <h2 class="text-3xl font-bold mb-8 text-center">गाँव की सुविधाएँ</h2> <div class="grid grid-cols-1 md:grid-cols-3 gap-8"> <div class="bg-white p-6 rounded-lg shadow-md"> <i class="fas fa-school text-4xl text-green-600 mb-4"></i> <h3 class="text-xl font-semibold mb-2">शिक्षा</h3> <ul class="text-gray-600 list-disc list-inside"> <li>प्राथमिक विद्यालय</li> <li>माध्यमिक विद्यालय</li> </ul> </div> <div class="bg-white p-6 rounded-lg shadow-md"> <i class="fas fa-hospital text-4xl text-green-600 mb-4"></i> <h3 class="text-xl font-semibold mb-2">स्वास्थ्य सेवाएँ</h3> <ul class="text-gray-600 list-disc list-inside"> <li>प्राथमिक स्वास्थ्य उपकेंद्र</li> <li>सामुदायिक स्वास्थ्य कार्यकर्ता</li> <li>मोबाइल चिकित्सा इकाइयाँ</li> </ul> </div> <div class="bg-white p-6 rounded-lg shadow-md"> <i class="fas fa-seedling text-4xl text-green-600 mb-4"></i> <h3 class="text-xl font-semibold mb-2">कृषि</h3> <ul class="text-gray-600 list-disc list-inside"> <li>गेहूँ और कपास की खेती</li> <li>मिर्च और सोयाबीन की खेती</li> <li>गन्ना उत्पादन</li> </ul> </div> </div> </div> </section>
+
+        <!-- Gallery Tab -->
+        <section id="gallery" class="tab-content">
+            <div class="container mx-auto px-4 py-12">
+                <h2 class="text-3xl font-bold mb-8 text-center">Gallery</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <img src="/api/placeholder/400/300" alt="Gallery Image 1" class="rounded-lg shadow-md">
+                    <img src="/api/placeholder/400/300" alt="Gallery Image 2" class="rounded-lg shadow-md">
+                    <img src="/api/placeholder/400/300" alt="Gallery Image 3" class="rounded-lg shadow-md">
+                    <img src="/api/placeholder/400/300" alt="Gallery Image 4" class="rounded-lg shadow-md">
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Directory Tab -->
+        <section id="contact-directory" class="tab-content">
+            <iframe src="test.html" id="contact-directory"></iframe>
+        </section>
+
+        <!-- Marketplace Tab -->
+        <section id="marketplace" class="tab-content">
+            <iframe src="buysell.html" id="marketplace"></iframe>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-green-800 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2024 Village Mardana. All rights reserved.</p>
+        </div>
+    </footer>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyA3Tb-ia3Po1BIZqZ2Jhy9pXxuwlKI874g",
-            authDomain: "contact-41939.firebaseapp.com",
-            databaseURL: "https://contact-41939-default-rtdb.firebaseio.com",
-            projectId: "contact-41939",
-            storageBucket: "contact-41939.appspot.com",
-            messagingSenderId: "392340324726",
-            appId: "1:392340324726:web:4f94aa39dc7b926a003a57",
-            measurementId: "G-LJQJGKEK9M"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const contactsRef = database.ref('contacts');
-
-        const authSection = document.getElementById('auth-section');
-        const app = document.getElementById('app');
-        const authBtn = document.getElementById('auth-btn');
-        const securityCodeInput = document.getElementById('security-code');
-        const form = document.getElementById('contact-form');
-        const contactList = document.getElementById('contact-list');
-        const statusMessage = document.getElementById('status-message');
-        const searchInput = document.getElementById('search');
-        const filterGroup = document.getElementById('filter-group');
-        const deleteModal = document.getElementById('delete-modal');
-        const deleteSecurityCodeInput = document.getElementById('delete-security-code');
-        const cancelDeleteBtn = document.getElementById('cancel-delete');
-        const confirmDeleteBtn = document.getElementById('confirm-delete');
-        const editModal = document.getElementById('edit-modal');
-        const editForm = document.getElementById('edit-form');
-        const editSecurityCodeInput = document.getElementById('edit-security-code');
-        const cancelEditBtn = document.getElementById('cancel-edit');
-        const importBtn = document.getElementById('import-btn');
-        const exportBtn = document.getElementById('export-btn');
-        const toggleSidebarBtn = document.getElementById('toggle-sidebar');
-        const sidebar = document.getElementById('sidebar');
-
-        const SECURITY_CODE = 'mayurana';
-        const DELETE_SECURITY_CODE = 'R@j@@2024';
-        let currentDeleteKey = null;
-        let currentEditKey = null;
-
-        function showMessage(message, isError = false) {
-            statusMessage.textContent = message;
-            statusMessage.className = `mt-6 p-4 rounded-lg ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
-            statusMessage.classList.remove('hidden');
-            setTimeout(() => {
-                statusMessage.classList.add('hidden');
-            }, 3000);
-        }
-
-        authBtn.addEventListener('click', () => {
-            if (securityCodeInput.value === SECURITY_CODE) {
-                authSection.classList.add('hidden');
-                app.classList.remove('hidden');
-                showSection('contacts');
-            } else {
-                showMessage('Incorrect security code', true);
-            }
-        });
-
-        function showSection(sectionId) {
-            document.querySelectorAll('section').forEach(section => section.classList.add('hidden'));
-            document.getElementById(sectionId).classList.remove('hidden');
-        }
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const contact = {
-                name: document.getElementById('name').value,
-                phone: document.getElementById('phone').value,
-                email: document.getElementById('email').value,
-                group: document.getElementById('group').value,
-                linkedin: document.getElementById('linkedin').value,
-                timestamp: new Date().toISOString()
-            };
-
-            contactsRef.push(contact)
-                .then(() => {
-                    showMessage("Contact added successfully!");
-                    form.reset();
-                })
-                .catch((error) => {
-                    showMessage("Error adding contact: " + error.message, true);
-                });
-        });
-
-        function renderContacts(contacts) {
-            contactList.innerHTML = '';
-            if (contacts) {
-                Object.entries(contacts).forEach(([key, contact]) => {
-                    const li = document.createElement('li');
-                    li.className = 'bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all hover-scale';
-                    li.innerHTML = `
-                        <div class="flex flex-col justify-between h-full">
-                            <div>
-                                <h3 class="text-xl font-semibold mb-2">${contact.name}</h3>
-                                <span class="inline-block px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm mb-3">${contact.group || 'No Group'}</span>
-                                <p class="text-gray-600 mb-1"><i class="fas fa-phone mr-2"></i>${contact.phone}</p>
-                                ${contact.email ? `<p class="text-gray-600 mb-1"><i class="fas fa-envelope mr-2"></i>${contact.email}</p>` : ''}
-                                ${contact.linkedin ? `<a href="${contact.linkedin}" target="_blank" class="text-blue-500 hover:text-blue-700"><i class="fab fa-linkedin mr-2"></i>LinkedIn Profile</a>` : ''}
-                            </div>
-                            <div class="mt-4 flex justify-end space-x-2">
-                                <button class="edit-btn text-blue-500 hover:text-blue-700 p-2" data-key="${key}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="delete-btn text-red-500 hover:text-red-700 p-2" data-key="${key}">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    contactList.appendChild(li);
-                });
-            } else {
-                contactList.innerHTML = '<li class="text-center text-gray-500 col-span-full">No contacts found</li>';
-            }
-        }
-
-        contactList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('delete-btn') || e.target.closest('.delete-btn')) {
-                currentDeleteKey = e.target.closest('.delete-btn').getAttribute('data-key');
-                deleteModal.classList.remove('hidden');
-                deleteModal.classList.add('flex');
-                deleteSecurityCodeInput.value = '';
-            } else if (e.target.classList.contains('edit-btn') || e.target.closest('.edit-btn')) {
-                currentEditKey = e.target.closest('.edit-btn').getAttribute('data-key');
-                openEditModal(currentEditKey);
-            }
-        });
-
-        function openEditModal(key) {
-            database.ref('contacts/' + key).once('value', (snapshot) => {
-                const contact = snapshot.val();
-                document.getElementById('edit-name').value = contact.name;
-                document.getElementById('edit-phone').value = contact.phone;
-                document.getElementById('edit-email').value = contact.email || '';
-                document.getElementById('edit-group').value = contact.group || '';
-                document.getElementById('edit-linkedin').value = contact.linkedin || '';
-                editModal.classList.remove('hidden');
-                editModal.classList.add('flex');
+        function showTab(tabId) {
+            var tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(function (tab) {
+                tab.classList.remove('active');
             });
+            document.getElementById(tabId).classList.add('active');
         }
 
-        editForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (editSecurityCodeInput.value === DELETE_SECURITY_CODE) {
-                const updatedContact = {
-                    name: document.getElementById('edit-name').value,
-                    phone: document.getElementById('edit-phone').value,
-                    email: document.getElementById('edit-email').value,
-                    group: document.getElementById('edit-group').value,
-                    linkedin: document.getElementById('edit-linkedin').value,
-                    timestamp: new Date().toISOString()
-                };
-
-                database.ref('contacts/' + currentEditKey).update(updatedContact)
-                    .then(() => {
-                        showMessage("Contact updated successfully!");
-                        editModal.classList.add('hidden');
-                        editModal.classList.remove('flex');
-                        currentEditKey = null;
-                    })
-                    .catch((error) => {
-                        showMessage("Error updating contact: " + error.message, true);
-                    });
-            } else {
-                showMessage("Incorrect security code", true);
-            }
-        });
-
-        cancelDeleteBtn.addEventListener('click', () => {
-            deleteModal.classList.add('hidden');
-            deleteModal.classList.remove('flex');
-            currentDeleteKey = null;
-        });
-
-        confirmDeleteBtn.addEventListener('click', () => {
-            if (deleteSecurityCodeInput.value === DELETE_SECURITY_CODE) {
-                database.ref('contacts/' + currentDeleteKey).remove()
-                    .then(() => {
-                        showMessage("Contact deleted successfully!");
-                        deleteModal.classList.add('hidden');
-                        deleteModal.classList.remove('flex');
-                        currentDeleteKey = null;
-                    })
-                    .catch((error) => {
-                        showMessage("Error deleting contact: " + error.message, true);
-                    });
-            } else {
-                showMessage("Incorrect deletion security code", true);
-            }
-        });
-
-        cancelEditBtn.addEventListener('click', () => {
-            editModal.classList.add('hidden');
-            editModal.classList.remove('flex');
-            currentEditKey = null;
-        });
-
-        function filterContacts() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const groupFilter = filterGroup.value;
-
-            contactsRef.once('value', (snapshot) => {
-                const contacts = snapshot.val();
-                const filteredContacts = Object.fromEntries(
-                    Object.entries(contacts).filter(([_, contact]) => 
-                        (contact.name.toLowerCase().includes(searchTerm) || 
-                         contact.phone.includes(searchTerm) ||
-                         (contact.email && contact.email.toLowerCase().includes(searchTerm))) &&
-                        (!groupFilter || contact.group === groupFilter)
-                    )
-                );
-                renderContacts(filteredContacts);
-            });
-        }
-
-        searchInput.addEventListener('input', filterContacts);
-        filterGroup.addEventListener('change', filterContacts);
-
-        contactsRef.on('value', (snapshot) => {
-            const contacts = snapshot.val();
-            renderContacts(contacts);
-        }, (error) => {
-            showMessage("Error fetching contacts: " + error.message, true);
-        });
-
-        importBtn.addEventListener('click', () => {
-            const fileInput = document.getElementById('import-file');
-            const file = fileInput.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const csv = e.target.result;
-                    const lines = csv.split('\n');
-                    lines.shift(); // Remove header row
-                    lines.forEach(line => {
-                        const [name, phone, email, group, linkedin] = line.split(',');
-                        if (name && phone) {
-                            const contact = {
-                                name: name.trim(),
-                                phone: phone.trim(),
-                                email: email ? email.trim() : '',
-                                group: group ? group.trim() : '',
-                                linkedin: linkedin ? linkedin.trim() : '',
-                                timestamp: new Date().toISOString()
-                            };
-                            contactsRef.push(contact);
-                        }
-                    });
-                    showMessage("Contacts imported successfully!");
-                    fileInput.value = '';
-                };
-                reader.readAsText(file);
-            } else {
-                showMessage("Please select a CSV file to import", true);
-            }
-        });
-
-        exportBtn.addEventListener('click', () => {
-            contactsRef.once('value', (snapshot) => {
-                const contacts = snapshot.val();
-                if (contacts) {
-                    let csv = 'Name,Phone,Email,Group,LinkedIn\n';
-                    Object.values(contacts).forEach(contact => {
-                        csv += `${contact.name},${contact.phone},${contact.email || ''},${contact.group || ''},${contact.linkedin || ''}\n`;
-                    });
-                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                    const link = document.createElement("a");
-                    if (link.download !== undefined) {
-                        const url = URL.createObjectURL(blob);
-                        link.setAttribute("href", url);
-                        link.setAttribute("download", "contacts.csv");
-                        link.style.visibility = 'hidden';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    }
-                    showMessage("Contacts exported successfully!");
-                } else {
-                    showMessage("No contacts to export", true);
-                }
-            });
-        });
-
-        toggleSidebarBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('hidden');
-        });
-
-        // Responsive design: Hide sidebar on small screens when a link is clicked
-        sidebar.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                if (window.innerWidth < 768) {
-                    sidebar.classList.add('hidden');
-                }
-            });
-        });
-
-        // Responsive design: Show/hide sidebar based on screen size
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 768) {
-                sidebar.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('hidden');
-            }
+        document.getElementById('mobile-menu-button').addEventListener('click', function () {
+            var menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
         });
     </script>
 </body>
