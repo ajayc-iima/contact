@@ -5,8 +5,158 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enhanced Narmada River Route - Interactive Guide</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" rel="stylesheet">
     <style>
+        /* Theme Variables */
         :root {
+            --primary: #3b82f6;
+            --primary-light: #60a5fa;
+            --bg-light: #f8fafc;
+            --text-light: #1e293b;
+            --card-light: #ffffff;
+            --border-light: #e2e8f0;
+            --bg-dark: #0f172a;
+            --text-dark: #e2e8f0;
+            --card-dark: #1e293b;
+            --border-dark: #334155;
+        }
+
+        [data-theme="dark"] {
+            --bg: var(--bg-dark);
+            --text: var(--text-dark);
+            --card: var(--card-dark);
+            --border: var(--border-dark);
+        }
+
+        [data-theme="light"] {
+            --bg: var(--bg-light);
+            --text: var(--text-light);
+            --card: var(--card-light);
+            --border: var(--border-light);
+        }
+
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        .header {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+            transition: background-color 0.3s;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Controls and Buttons */
+        .controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .theme-toggle, .control-button {
+            background: none;
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        /* Search and Filters */
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 40px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--text);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text);
+            opacity: 0.5;
+        }
+
+        /* Map Styles */
+        #map {
+            height: 400px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .location-info {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* Location Cards */
+        .location-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* Rest of your existing CSS */
+         :root {
             --primary: #3b82f6;
             --primary-light: #60a5fa;
             --bg-light: #f8fafc;
@@ -395,10 +545,12 @@
         .nav-link:hover {
             color: var(--primary-light);
         }
+        /* ... (Include all the remaining CSS from the original file) */
     </style>
 </head>
 <body data-theme="light">
     <div class="container">
+        <!-- Header -->
         <header class="header">
             <div class="header-top">
                 <h1 class="title">
@@ -418,11 +570,13 @@
                 </div>
             </div>
             
+            <!-- Search -->
             <div class="search-container">
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" class="search-input" id="searchInput" placeholder="Search locations, types, or facilities..." aria-label="Search">
             </div>
 
+            <!-- Filters -->
             <div class="filters" role="toolbar" aria-label="Location filters">
                 <button class="filter-btn active" data-filter="all">
                     <i class="fas fa-globe"></i>
@@ -451,16 +605,25 @@
             </div>
         </header>
 
+        <!-- Map Section -->
+        <div id="map"></div>
+        <div id="location-info" class="location-info"></div>
+
+        <!-- Route Visualization -->
         <div class="route-visualization" id="routeVisualization">
-            <h2 style="margin-bottom: 20px;">Route Overview</h2>
+            <h2>Route Overview</h2>
             <div class="route-map" id="routeMap"></div>
         </div>
 
+        <!-- Locations List -->
         <main id="locationsList" role="main" aria-live="polite"></main>
     </div>
 
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <script>
-     const locations = [
+        // Data Structure
+        const locations = [
     {
         id: 1,
         name: "Omkareshwar Temple",
@@ -482,7 +645,7 @@
         type: "village",
         icon: "house",
         distance: 6,
-        coordinates: { lat: 22.2539, lng: 76.1592 },
+        coordinates: { lat: 22.2248152, lng: 76.1164406 },
         facilities: ["Local Guides", "Basic Amenities", "Traditional Homestays"],
         description: "Historic village with rich religious significance and traditional architecture.",
         imageUrl: "/api/placeholder/800/400",
@@ -497,7 +660,7 @@
         type: "ghat",
         icon: "water",
         distance: 6,
-        coordinates: { lat: 22.2639, lng: 76.1692 },
+        coordinates: { lat: 22.2217718, lng: 76.0461051 }, 
         facilities: ["Boat Service", "Rest Area", "Meditation Spots"],
         description: "Important river crossing point with historical significance and spiritual importance.",
         imageUrl: "/api/placeholder/800/400",
@@ -506,13 +669,14 @@
         nearbyAttractions: ["Ancient Stone Carvings", "Sunset Point", "River View"],
         contactInfo: "Ghat Manager: +91 XXXXXXXXXX"
     },
-    {
+
+     {
         id: 4,
-        name: "Tonksar (Anna Kshetra)",
+        name: "Tonksar (Gomukh Anna Kshetra)",
         type: "pilgrimage",
         icon: "temple",
         distance: 4,
-        coordinates: { lat: 22.2740, lng: 76.1793 },
+        coordinates: { lat:  22.190989, lng: 75.971231},
         facilities: ["Free meals", "Shelter", "Meditation Hall"],
         description: "Place offering free food to pilgrims, with a serene environment for meditation.",
         imageUrl: "/api/placeholder/800/400",
@@ -527,7 +691,7 @@
         type: "village",
         icon: "house",
         distance: 2,
-        coordinates: { lat: 22.2839, lng: 76.1893 },
+        coordinates: { lat: 22.186755, lng: 75.957040 },
         facilities: ["Local Shops", "Food Stalls", "Crafts Market"],
         description: "Small village with local shops offering handmade crafts and traditional food.",
         imageUrl: "/api/placeholder/800/400",
@@ -542,7 +706,7 @@
         type: "village",
         icon: "house",
         distance: 4,
-        coordinates: { lat: 22.2939, lng: 76.1994 },
+        coordinates: { lat: 22.188424, lng: 75.925668 }, 
         facilities: ["Restrooms", "Small Cafes", "Information Center"],
         description: "Village with basic facilities for travelers, known for its small cafes and local hospitality.",
         imageUrl: "/api/placeholder/800/400",
@@ -557,7 +721,7 @@
         type: "historical",
         icon: "memorial",
         distance: 6,
-        coordinates: { lat: 22.3039, lng: 76.2095 },
+        coordinates: { lat:  22.173403, lng:  75.876766 },  
         facilities: ["Parking", "Guide Services", "Historical Tours"],
         description: "Historical site of Bajirao's memorial, offering guided tours and exhibits on local history.",
         imageUrl: "/api/placeholder/800/400",
@@ -572,7 +736,7 @@
         type: "pilgrimage",
         icon: "temple",
         distance: 4,
-        coordinates: { lat: 22.3139, lng: 76.2196 },
+        coordinates: { lat:  22.169581, lng:75.848362 }, 
         facilities: ["Free meals", "Shelter", "Yoga Center"],
         description: "Anna Kshetra offering food to pilgrims, with a dedicated yoga center for visitors.",
         imageUrl: "/api/placeholder/800/400",
@@ -587,7 +751,7 @@
         type: "village",
         icon: "house",
         distance: 3,
-        coordinates: { lat: 22.3239, lng: 76.2297 },
+        coordinates: { lat:  22.173926, lng:  75.819249 }, 
         facilities: ["Local Food", "Shops", "Guesthouses"],
         description: "Village with basic necessities, known for its traditional guesthouses and local cuisine.",
         imageUrl: "/api/placeholder/800/400",
@@ -596,627 +760,140 @@
         nearbyAttractions: ["Local Handicrafts", "Traditional Houses", "Cultural Events"],
         contactInfo: "Village Council: +91 XXXXXXXXXX"
     },
-    {
-        id: 10,
-        name: "Naogawa",
-        type: "village",
-        icon: "house",
-        distance: 2,
-        coordinates: { lat: 22.3339, lng: 76.2398 },
-        facilities: ["Rest Stop", "Viewpoint", "Snack Stalls"],
-        description: "Resting point for travelers with a beautiful viewpoint over the surrounding landscape.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 11,
-        prevLocation: 9,
-        nearbyAttractions: ["Nature Trails", "Local Market", "Scenic Views"],
-        contactInfo: "Local Office: +91 XXXXXXXXXX"
-    },
-      {
-        id: 11,
-        name: "Teli Bhatyan (Siyaram Baba)",
-        type: "pilgrimage",
-        icon: "temple",
-        distance: 5,
-        coordinates: { lat: 22.3439, lng: 76.2499 },
-        facilities: ["Parking", "Shelter", "Restrooms"],
-        description: "A spiritual site known for the temple of Siyaram Baba, attracting pilgrims year-round.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 12,
-        prevLocation: 10,
-        nearbyAttractions: ["Meditation Spots", "Temple Courtyard", "Pilgrims' Rest House"],
-        contactInfo: "Temple Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 12,
-        name: "Ramakrishna Hari Seva Ashram (Anna Kshetra)",
-        type: "ashram",
-        icon: "ashram",
-        distance: 2,
-        coordinates: { lat: 22.3539, lng: 76.2590 },
-        facilities: ["Free Meals", "Meditation Hall", "Accommodations"],
-        description: "Ashram known for serving free meals and offering a serene environment for meditation.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 13,
-        prevLocation: 11,
-        nearbyAttractions: ["Ashram Library", "Yoga Center", "Tranquil Gardens"],
-        contactInfo: "Ashram Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 13,
-        name: "Sasavat",
-        type: "village",
-        icon: "house",
-        distance: 3,
-        coordinates: { lat: 22.3639, lng: 76.2691 },
-        facilities: ["Local Food", "Small Shops", "Guesthouses"],
-        description: "A quaint village known for local food and a small market with traditional shops.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 14,
-        prevLocation: 12,
-        nearbyAttractions: ["Local Handicrafts", "Heritage Walks", "Village Temples"],
-        contactInfo: "Village Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 14,
-        name: "Amalath",
-        type: "village",
-        icon: "house",
-        distance: 3,
-        coordinates: { lat: 22.3739, lng: 76.2792 },
-        facilities: ["Rest Area", "Food Stalls", "Information Center"],
-        description: "Village with facilities for travelers, known for its local food stalls and scenic beauty.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 15,
-        prevLocation: 13,
-        nearbyAttractions: ["Scenic Viewpoint", "Local Market", "Nature Trails"],
-        contactInfo: "Village Council: +91 XXXXXXXXXX"
-    },
-    {
-        id: 15,
-        name: "Lepa",
-        type: "village",
-        icon: "house",
-        distance: 5,
-        coordinates: { lat: 22.3839, lng: 76.2893 },
-        facilities: ["Restrooms", "Small Cafes", "Parking"],
-        description: "A peaceful village offering a rest stop for travelers, with parking and small cafes.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 16,
-        prevLocation: 14,
-        nearbyAttractions: ["Hill View", "Local Cafe", "Picnic Spot"],
-        contactInfo: "Local Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 16,
-        name: "Mankadkheda",
-        type: "village",
-        icon: "house",
-        distance: 6,
-        coordinates: { lat: 22.3939, lng: 76.2994 },
-        facilities: ["Rest Area", "Local Food", "Shops"],
-        description: "Village known for its traditional cuisine and shops selling local products.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 17,
-        prevLocation: 15,
-        nearbyAttractions: ["Traditional Market", "Nature Walks", "Cultural Events"],
-        contactInfo: "Village Head: +91 XXXXXXXXXX"
-    },
-    {
-        id: 17,
-        name: "Kathora",
-        type: "village",
-        icon: "house",
-        distance: 6,
-        coordinates: { lat: 22.4039, lng: 76.3095 },
-        facilities: ["Local Guide", "Rest Stop", "Basic Amenities"],
-        description: "A village with a local guide facility, known for its calm environment and small rest stop.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 18,
-        prevLocation: 16,
-        nearbyAttractions: ["Traditional Houses", "Viewpoint", "Craft Shops"],
-        contactInfo: "Local Council: +91 XXXXXXXXXX"
-    },
-    {
-        id: 18,
-        name: "Badgaon",
-        type: "village",
-        icon: "house",
-        distance: 4,
-        coordinates: { lat: 22.4139, lng: 76.3196 },
-        facilities: ["Shops", "Food Stalls", "Local Market"],
-        description: "Village with a bustling local market, offering a variety of local goods and food stalls.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 19,
-        prevLocation: 17,
-        nearbyAttractions: ["Local Market", "Handicraft Shops", "Cultural Hub"],
-        contactInfo: "Market Head: +91 XXXXXXXXXX"
-    },
-    {
-        id: 19,
-        name: "Shalivahan",
-        type: "village",
-        icon: "house",
-        distance: 2,
-        coordinates: { lat: 22.4239, lng: 76.3297 },
-        facilities: ["Local Food", "Basic Amenities", "Small Temple"],
-        description: "A small village known for its local food and a small yet popular temple.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 20,
-        prevLocation: 18,
-        nearbyAttractions: ["Local Festival Site", "Traditional Houses", "Small Temple"],
-        contactInfo: "Village Head: +91 XXXXXXXXXX"
-    },
-    {
-        id: 20,
-        name: "Navdatodi Anna Kshetra",
-        type: "pilgrimage",
-        icon: "temple",
-        distance: 1,
-        coordinates: { lat: 22.4339, lng: 76.3398 },
-        facilities: ["Free Meals", "Shelter", "Parking"],
-        description: "Anna Kshetra serving free meals to pilgrims, known for its tranquil setting.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 21,
-        prevLocation: 19,
-        nearbyAttractions: ["Ashram Grounds", "Meditation Spots", "Pilgrims Rest Area"],
-        contactInfo: "Anna Kshetra Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 21,
-        name: "Dhalkheda",
-        type: "village",
-        icon: "house",
-        distance: 4,
-        coordinates: { lat: 22.4439, lng: 76.3499 },
-        facilities: ["Local Shops", "Food Stalls", "Rest Areas"],
-        description: "A small village known for its local shops and a place for travelers to rest.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 22,
-        prevLocation: 20,
-        nearbyAttractions: ["Scenic Views", "Village Temples", "Cultural Events"],
-        contactInfo: "Village Council: +91 XXXXXXXXXX"
-    },
-    {
-        id: 22,
-        name: "Balgaon",
-        type: "village",
-        icon: "house",
-        distance: 5,
-        coordinates: { lat: 22.4539, lng: 76.3600 },
-        facilities: ["Accommodations", "Food Options", "Parking"],
-        description: "A village providing accommodations and food options for visitors.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 23,
-        prevLocation: 21,
-        nearbyAttractions: ["Local Markets", "Nature Trails", "Cultural Sites"],
-        contactInfo: "Village Head: +91 XXXXXXXXXX"
-    },
-    {
-        id: 23,
-        name: "Khalghat",
-        type: "ghat",
-        icon: "water",
-        distance: 5,
-        coordinates: { lat: 22.4639, lng: 76.3701 },
-        facilities: ["Boat Service", "Rest Areas", "Fishing Spots"],
-        description: "A river ghat known for boating and fishing activities, popular among locals.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 24,
-        prevLocation: 22,
-        nearbyAttractions: ["Sunset View", "Fishing Areas", "Relaxation Spots"],
-        contactInfo: "Ghat Manager: +91 XXXXXXXXXX"
-    },
-    {
-        id: 24,
-        name: "Khaltanka Anna Kshetra",
-        type: "pilgrimage",
-        icon: "temple",
-        distance: 1,
-        coordinates: { lat: 22.4739, lng: 76.3802 },
-        facilities: ["Free Meals", "Parking", "Shelter"],
-        description: "A pilgrimage site providing free meals to visitors, set in a peaceful location.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 25,
-        prevLocation: 23,
-        nearbyAttractions: ["Pilgrims' Rest Area", "Ashram Grounds", "Meditation Spots"],
-        contactInfo: "Anna Kshetra Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 25,
-        name: "Chichli Anna Kshetra",
-        type: "pilgrimage",
-        icon: "temple",
-        distance: 5,
-        coordinates: { lat: 22.4839, lng: 76.3903 },
-        facilities: ["Free Meals", "Resting Area", "Local Shops"],
-        description: "A popular Anna Kshetra providing meals for pilgrims and visitors.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 26,
-        prevLocation: 24,
-        nearbyAttractions: ["Dining Area", "Prayer Hall", "Community Events"],
-        contactInfo: "Chichli Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 26,
-        name: "Bhoinda",
-        type: "village",
-        icon: "house",
-        distance: 5,
-        coordinates: { lat: 22.4939, lng: 76.4004 },
-        facilities: ["Local Food", "Rest Areas", "Basic Amenities"],
-        description: "A village with a welcoming atmosphere, offering local food and basic amenities.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 27,
-        prevLocation: 25,
-        nearbyAttractions: ["Cultural Heritage", "Village Temples", "Local Crafts"],
-        contactInfo: "Village Head: +91 XXXXXXXXXX"
-    },
-    {
-        id: 27,
-        name: "Abhali",
-        type: "village",
-        icon: "house",
-        distance: 3,
-        coordinates: { lat: 22.5039, lng: 76.4105 },
-        facilities: ["Local Shops", "Food Stalls", "Rest Areas"],
-        description: "A village famous for its local shops and vibrant food stalls.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 28,
-        prevLocation: 26,
-        nearbyAttractions: ["Scenic Views", "Cultural Events", "Local Festivals"],
-        contactInfo: "Village Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 28,
-        name: "Kerwa",
-        type: "village",
-        icon: "house",
-        distance: 3,
-        coordinates: { lat: 22.5139, lng: 76.4206 },
-        facilities: ["Food Options", "Rest Areas", "Parking"],
-        description: "Known for its food options and a resting area for travelers.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 29,
-        prevLocation: 27,
-        nearbyAttractions: ["Nature Trails", "Cultural Sites", "Local Cuisine"],
-        contactInfo: "Village Council: +91 XXXXXXXXXX"
-    },
-    {
-        id: 29,
-        name: "Davana",
-        type: "village",
-        icon: "house",
-        distance: 3,
-        coordinates: { lat: 22.5239, lng: 76.4307 },
-        facilities: ["Rest Area", "Basic Amenities", "Local Guides"],
-        description: "A small village offering basic amenities and local guides for visitors.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 30,
-        prevLocation: 28,
-        nearbyAttractions: ["Local Market", "Cultural Heritage", "Nature Views"],
-        contactInfo: "Village Head: +91 XXXXXXXXXX"
-    },
-    {
-        id: 30,
-        name: "Lakhangaon Anna Kshetra",
-        type: "pilgrimage",
-        icon: "temple",
-        distance: 5,
-        coordinates: { lat: 22.5339, lng: 76.4408 },
-        facilities: ["Free Meals", "Shelter", "Parking"],
-        description: "A pilgrimage site known for providing free meals and a serene environment.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 31,
-        prevLocation: 29,
-        nearbyAttractions: ["Prayer Area", "Meditation Spots", "Community Gatherings"],
-        contactInfo: "Lakhangaon Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 31,
-        name: "Chakeri",
-        type: "village",
-        icon: "house",
-        distance: 15,
-        coordinates: { lat: 22.5539, lng: 76.4509 },
-        facilities: ["Local Shops", "Rest Areas", "Food Options"],
-        description: "A larger village with a variety of shops and food options for travelers.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 32,
-        prevLocation: 30,
-        nearbyAttractions: ["Cultural Events", "Local Handicrafts", "Traditional Cuisine"],
-        contactInfo: "Village Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 32,
-        name: "Anjad",
-        type: "town",
-        icon: "town",
-        distance: 4,
-        coordinates: { lat: 22.5639, lng: 76.4610 },
-        facilities: ["Shops", "Restaurants", "Parking"],
-        description: "A town known for its local shops and a range of restaurants.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 33,
-        prevLocation: 31,
-        nearbyAttractions: ["Market Square", "Cultural Festivals", "Historical Sites"],
-        contactInfo: "Town Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 33,
-        name: "Borlay",
-        type: "village",
-        icon: "house",
-        distance: 6,
-        coordinates: { lat: 22.5739, lng: 76.4711 },
-        facilities: ["Local Amenities", "Food Stalls", "Parking"],
-        description: "A village providing local amenities and food stalls for travelers.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 34,
-        prevLocation: 32,
-        nearbyAttractions: ["Village Temples", "Local Handicrafts", "Nature Trails"],
-        contactInfo: "Village Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 34,
-        name: "Badwani District",
-        type: "district",
-        icon: "district",
-        distance: 10,
-        coordinates: { lat: 22.5839, lng: 76.4812 },
-        facilities: ["Administrative Offices", "Local Shops", "Restaurants"],
-        description: "The administrative district known for its local governance and amenities.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: 35,
-        prevLocation: 33,
-        nearbyAttractions: ["Historical Sites", "Natural Parks", "Cultural Centers"],
-        contactInfo: "District Office: +91 XXXXXXXXXX"
-    },
-    {
-        id: 35,
-        name: "Bavangaja (Jain Tirth)",
-        type: "pilgrimage",
-        icon: "temple",
-        distance: 9,
-        coordinates: { lat: 22.5939, lng: 76.4913 },
-        facilities: ["Free Meals", "Shelter", "Parking"],
-        description: "A significant Jain pilgrimage site, offering free meals and accommodations.",
-        imageUrl: "/api/placeholder/800/400",
-        nextLocation: null,
-        prevLocation: 34,
-        nearbyAttractions: ["Jain Temples", "Cultural Heritage", "Meditation Spots"],
-        contactInfo: "Pilgrimage Office: +91 XXXXXXXXXX"
-    },
+
+
     // Continuing to add more entries in the same format, based on the provided data
     // ...
 ];
+        // Map Initialization
+        // Location tracking and mapping enhancements
+let userMarker = null;
+let userCircle = null;
+let map = null;
 
-        function createLocationCard(location, showNavigation = false) {
-    const prevLocation = location.prevLocation ? locations.find(l => l.id === location.prevLocation) : null;
-    const nextLocation = location.nextLocation ? locations.find(l => l.id === location.nextLocation) : null;
+// Initialize map with user location tracking
+function initMap() {
+    const narmadaCenter = [22.7519, 77.7289];
+    map = L.map('map').setView(narmadaCenter, 8);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
 
-    return `
-        <article class="location-card" id="location-${location.id}">
-            <div class="location-header">
-                <div class="location-title-section">
-                    <div class="location-icon" style="background: var(--primary)">
+    // Add markers for all locations
+    locations.forEach(location => {
+        const marker = L.marker([location.coordinates.lat, location.coordinates.lng])
+            .bindPopup(`
+                <b>${location.name}</b><br>
+                Type: ${location.type}<br>
+                Distance: <span id="distance-${location.id}">calculating...</span>
+            `)
+            .addTo(map);
+    });
+
+    // Start tracking user location
+    startLocationTracking();
+    
+    return map;
+}
+// Calculate distance between two points using Haversine formula
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+             Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+             Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+// Start continuous location tracking
+function startLocationTracking() {
+    if ("geolocation" in navigator) {
+        // Watch position instead of getting it once
+        const watchId = navigator.geolocation.watchPosition(
+            position => updateUserLocation(position),
+            error => handleLocationError(error),
+            {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            }
+        );
+    } else {
+        alert('Geolocation is not supported by your browser.');
+    }
+}
+
+        // Route Visualization
+        function initializeRouteVisualization() {
+            const routeMap = document.getElementById('routeMap');
+            routeMap.innerHTML = locations.map(location => `
+                <div class="route-point">
+                    <div class="point-icon">
                         <i class="fas fa-${location.icon}"></i>
                     </div>
-                    <div class="location-info">
-                        <h3>${location.name}</h3>
-                        <span class="location-type">${location.type.charAt(0).toUpperCase() + location.type.slice(1)}</span>
-                    </div>
+                    <span class="point-label">${location.name}</span>
                 </div>
-                <div class="detail-item">
-                    <i class="fas fa-map-marker-alt"></i>
-                    ${location.distance}km
-                </div>
-            </div>
+            `).join('');
+        }
 
-            <img src="${location.imageUrl}" alt="${location.name}" class="location-image">
+        // Search and Filter
+        function initializeSearchAndFilter() {
+            const searchInput = document.getElementById('searchInput');
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const locationsList = document.getElementById('locationsList');
 
-            <div class="location-details">
-                <div class="detail-item">
-                    <i class="fas fa-map-pin"></i>
-                    ${location.coordinates.lat}, ${location.coordinates.lng}
-                </div>
-                <div class="detail-item">
-                    <i class="fas fa-phone"></i>
-                    ${location.contactInfo}
-                </div>
-            </div>
-
-            <p>${location.description}</p>
-
-            <div class="facilities-list">
-                ${location.facilities.map(facility => `
-                    <span class="facility-tag">
-                        <i class="fas fa-check"></i>
-                        ${facility}
-                    </span>
-                `).join('')}
-            </div>
-
-            <h4 style="margin-top: 15px;">Nearby Attractions:</h4>
-            <ul class="attractions-list">
-                ${location.nearbyAttractions.map(attraction => `
-                    <li>${attraction}</li>
-                `).join('')}
-            </ul>
-
-            ${showNavigation ? `
-                <div class="navigation-links">
-                    ${prevLocation ? `
-                        <button class="nav-link" onclick="scrollToLocation(${prevLocation.id})">
-                            <i class="fas fa-arrow-left"></i>
-                            Previous: ${prevLocation.name}
-                        </button>
-                    ` : '<div></div>'}
+            function updateLocations(searchTerm = '', filterType = 'all') {
+                const filteredLocations = locations.filter(location => {
+                    const matchesSearch = location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        location.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        location.facilities.some(f => f.toLowerCase().includes(searchTerm.toLowerCase()));
                     
-                    ${nextLocation ? `
-                        <button class="nav-link" onclick="scrollToLocation(${nextLocation.id})">
-                            Next: ${nextLocation.name}
-                            <i class="fas fa-arrow-right"></i>
-                        </button>
-                    ` : '<div></div>'}
-                </div>
-            ` : ''}
-        </article>
-    `;
-}
+                    const matchesFilter = filterType === 'all' || location.type === filterType;
+                    
+                    return matchesSearch && matchesFilter;
+                });
 
-// Initialize the route visualization
-function initializeRouteVisualization() {
-    const routeMap = document.getElementById('routeMap');
-    routeMap.innerHTML = locations.map(location => `
-        <div class="route-point">
-            <div class="point-icon">
-                <i class="fas fa-${location.icon}"></i>
-            </div>
-            <span class="point-label">${location.name}</span>
-        </div>
-    `).join('');
-}
-
-// Search and filter functionality
-function initializeSearchAndFilter() {
-    const searchInput = document.getElementById('searchInput');
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const locationsList = document.getElementById('locationsList');
-
-    function updateLocations(searchTerm = '', filterType = 'all') {
-        const filteredLocations = locations.filter(location => {
-            const matchesSearch = location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                location.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                location.facilities.some(f => f.toLowerCase().includes(searchTerm.toLowerCase()));
-            
-            const matchesFilter = filterType === 'all' || location.type === filterType;
-            
-            return matchesSearch && matchesFilter;
-        });
-
-        locationsList.innerHTML = filteredLocations.length ? 
-            filteredLocations.map(location => createLocationCard(location, true)).join('') :
-            '<div class="no-results">No locations found matching your criteria</div>';
-    }
-
-    searchInput.addEventListener('input', (e) => {
-        const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
-        updateLocations(e.target.value, activeFilter);
-    });
-
-    filterButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            updateLocations(searchInput.value, button.dataset.filter);
-        });
-    });
-
-    // Initial load
-    updateLocations();
-}
-
-// Theme toggle functionality
-function initializeThemeToggle() {
-    const themeToggle = document.getElementById('themeToggle');
-    const body = document.body;
-    const icon = themeToggle.querySelector('i');
-
-    themeToggle.addEventListener('click', () => {
-        const isDark = body.dataset.theme === 'dark';
-        body.dataset.theme = isDark ? 'light' : 'dark';
-        icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
-    });
-}
-
-// Helper function to scroll to a specific location
-function scrollToLocation(locationId) {
-    const element = document.getElementById(`location-${locationId}`);
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-
-// Location navigation with smooth scroll and focus management
-        function navigateToLocation(locationId) {
-            const element = document.getElementById(`location-${locationId}`);
-            element.scrollIntoView({ behavior: 'smooth' });
-            element.focus();
-        }
-
-        // Expand/collapse functionality with accessibility
-        function toggleExpand(locationId) {
-            const expandedContent = document.getElementById(`expanded-${locationId}`);
-            const button = expandedContent.previousElementSibling;
-            const isExpanded = expandedContent.classList.contains('active');
-            
-            expandedContent.classList.toggle('active');
-            button.setAttribute('aria-expanded', !isExpanded);
-            button.innerHTML = !isExpanded 
-                ? '<i class="fas fa-chevron-up"></i><span>Show Less</span>'
-                : '<i class="fas fa-chevron-down"></i><span>Show More</span>';
-        }
-
-        // Help button functionality
-        document.getElementById('helpButton').addEventListener('click', () => {
-            alert(`Welcome to the Narmada River Route Guide!
-
-Navigation Tips:
-- Use filters above to explore different types of locations
-- Search box helps find specific places or facilities
-- Click "Show More" to see additional details about each location
-- Use the theme toggle for light/dark mode
-- Previous/Next buttons help navigate between connected locations
-
-For the best experience, enable location services to find nearby points of interest.`);
-        });
-
-        // Location button functionality with error handling
-        document.getElementById('locationButton').addEventListener('click', () => {
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(
-                    position => {
-                        const userLat = position.coords.latitude;
-                        const userLng = position.coords.longitude;
-                        
-                        // Find nearest location
-                        const nearest = locations.reduce((nearest, location) => {
-                            const distance = calculateDistance(
-                                userLat, userLng,
-                                location.coordinates.lat,
-                                location.coordinates.lng
-                            );
-                            return distance < nearest.distance ? { location, distance } : nearest;
-                        }, { location: null, distance: Infinity });
-
-                        if (nearest.location) {
-                            alert(`Nearest location: ${nearest.location.name}\nApprox. distance: ${nearest.distance.toFixed(1)} km`);
-                            navigateToLocation(nearest.location.id);
-                        }
-                    },
-                    error => {
-                        let message = 'Unable to retrieve your location. ';
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                message += 'Please enable location services to use this feature.';
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                message += 'Location information is unavailable.';
-                                break;
-                            case error.TIMEOUT:
-                                message += 'The request timed out.';
-                                break;
-                            default:
-                                message += 'An unknown error occurred.';
-                        }
-                        alert(message);
-                    }
-                );
-            } else {
-                alert("Location services are not available in your browser.");
+                locationsList.innerHTML = filteredLocations.length ? 
+                    filteredLocations.map(location => createLocationCard(location, true)).join('') :
+                    '<div class="no-results">No locations found matching your criteria</div>';
             }
-        });
 
-        // Helper function to calculate distance between coordinates
+            // Event Listeners
+            searchInput.addEventListener('input', (e) => {
+                const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+                updateLocations(e.target.value, activeFilter);
+            });
+
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    updateLocations(searchInput.value, button.dataset.filter);
+                });
+            });
+
+            // Initial load
+            updateLocations();
+        }
+
+        // Theme Toggle
+        function initializeThemeToggle() {
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            const icon = themeToggle.querySelector('i');
+
+            themeToggle.addEventListener('click', () => {
+                const isDark = body.dataset.theme === 'dark';
+                body.dataset.theme = isDark ? 'light' : 'dark';
+                icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+            });
+        }
+
+        // Utility Functions
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371; // Earth's radius in km
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1228,15 +905,451 @@ For the best experience, enable location services to find nearby points of inter
             return R * c;
         }
 
+        function scrollToLocation(locationId) {
+            const element = document.getElementById(`location-${locationId}`);
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
 
 
-// Initialize everything when the DOM is loaded
+        // Update user's location on map
+function updateUserLocation(position) {
+    const userLat = position.coords.latitude;
+    const userLng = position.coords.longitude;
+    
+    // Remove existing user location markers
+    if (userMarker) map.removeLayer(userMarker);
+    if (userCircle) map.removeLayer(userCircle);
+    
+    // Add user location marker
+    const userIcon = L.divIcon({
+        html: '<i class="fas fa-user-circle" style="color: #2563eb; font-size: 24px;"></i>',
+        className: 'user-location-marker',
+        iconSize: [24, 24]
+    });
+    
+    userMarker = L.marker([userLat, userLng], {icon: userIcon})
+        .bindPopup('Your location')
+        .addTo(map);
+    
+    // Add accuracy circle
+    userCircle = L.circle([userLat, userLng], {
+        radius: position.coords.accuracy,
+        color: '#2563eb',
+        fillColor: '#60a5fa',
+        fillOpacity: 0.2
+    }).addTo(map);
+    
+    // Update distances to all locations
+    updateDistances(userLat, userLng);
+    
+    // Find and highlight nearest location
+    const nearest = findNearestLocation(userLat, userLng);
+    updateNearestLocationInfo(nearest);
+}
+
+// Update distances to all locations
+function updateDistances(userLat, userLng) {
+    locations.forEach(location => {
+        const distance = calculateDistance(
+            userLat, userLng,
+            location.coordinates.lat,
+            location.coordinates.lng
+        );
+        
+        // Update distance in popup
+        const distanceElement = document.getElementById(`distance-${location.id}`);
+        if (distanceElement) {
+            distanceElement.textContent = `${distance.toFixed(1)} km`;
+        }
+    });
+}
+
+// Find nearest location
+function findNearestLocation(userLat, userLng) {
+    return locations.reduce((nearest, location) => {
+        const distance = calculateDistance(
+            userLat, userLng,
+            location.coordinates.lat,
+            location.coordinates.lng
+        );
+        return distance < nearest.distance ? { location, distance } : nearest;
+    }, { location: null, distance: Infinity });
+}
+
+// Update nearest location information
+function updateNearestLocationInfo(nearest) {
+    const locationInfo = document.getElementById('location-info');
+    if (nearest.location) {
+        locationInfo.innerHTML = `
+            <h3>Nearest Location</h3>
+            <p><strong>${nearest.location.name}</strong></p>
+            <p>Distance: ${nearest.distance.toFixed(1)} km</p>
+            <p>Type: ${nearest.location.type}</p>
+            <button onclick="scrollToLocation(${nearest.location.id})" class="filter-btn">
+                <i class="fas fa-map-marker-alt"></i> View Details
+            </button>
+        `;
+    }
+}
+
+// Handle location errors
+function handleLocationError(error) {
+    let message = 'Unable to retrieve your location. ';
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            message += 'Please enable location services to use this feature.';
+            break;
+        case error.POSITION_UNAVAILABLE:
+            message += 'Location information is unavailable.';
+            break;
+        case error.TIMEOUT:
+            message += 'The request to get location timed out.';
+            break;
+        case error.UNKNOWN_ERROR:
+            message += 'An unknown error occurred.';
+            break;
+    }
+    alert(message);
+}
+
+// Location button click handler
+function handleLocationButtonClick() {
+    if (userMarker) {
+        map.setView(userMarker.getLatLng(), 12);
+    } else {
+        startLocationTracking();
+    }
+}
+
+// Update the initialization
 document.addEventListener('DOMContentLoaded', () => {
+    const map = initMap();
     initializeRouteVisualization();
     initializeSearchAndFilter();
     initializeThemeToggle();
+
+    // Update location button handler
+    document.getElementById('locationButton').addEventListener('click', handleLocationButtonClick);
 });
 
-</script>
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', () => {
+            const map = initMap();
+            initializeRouteVisualization();
+            initializeSearchAndFilter();
+            initializeThemeToggle();
+
+            // Help Button Handler
+            document.getElementById('helpButton').addEventListener('click', () => {
+                alert(`Welcome to the Narmada River Route Guide!
+
+Navigation Tips:
+- Use filters above to explore different types of locations
+- Search box helps find specific places or facilities
+- Click "Show More" to see additional details about each location
+- Use the theme toggle for light/dark mode
+- Previous/Next buttons help navigate between connected locations
+
+For the best experience, enable location services to find nearby points of interest.`);
+            });
+
+            // Location Button Handler
+            document.getElementById('locationButton').addEventListener('click', () => {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        position => {
+                            const userLat = position.coords.latitude;
+                            const userLng = position.coords.longitude;
+                            
+                            // Find nearest location
+                            const nearest = locations.reduce((nearest, location) => {
+                                const distance = calculateDistance(
+                                    userLat, userLng,
+                                    location.coordinates.lat,
+                                    location.coordinates.lng
+                                );
+                                return distance < nearest.distance ? { location, distance } : nearest;
+                            }, { location: null, distance: Infinity });
+
+                            if (nearest.location) {
+                                alert(`Nearest location: ${nearest.location.name}\nApprox. distance: ${nearest.distance.toFixed(1)} km`);
+                                scrollToLocation(nearest.location.id);
+                            }
+                        },
+                        error => {
+                            let message = 'Unable to retrieve your location. ';
+                            switch(error.code) {
+                                case error.PERMISSION_DENIED:
+                                    message += 'Please enable location services to use this feature.'
+                                    break;
+                                case error.POSITION_UNAVAILABLE:
+                                    message += 'Location information is unavailable.';
+                                    break;
+                                case error.TIMEOUT:
+                                    message += 'The request to get location timed out.';
+                                    break;
+                                case error.UNKNOWN_ERROR:
+                                    message += 'An unknown error occurred.';
+                                    break;
+                            }
+                            alert(message);
+                        }
+                    );
+                } else {
+                    alert('Geolocation is not supported by your browser.');
+                }
+            });
+        });
+
+        // Location Card Creation (Complete Implementation)
+        function createLocationCard(location, showNavigation = false) {
+            return `
+                <article class="location-card" id="location-${location.id}">
+                    <div class="location-header">
+                        <h2 class="location-title">
+                            <i class="fas fa-${location.icon}"></i>
+                            ${location.name}
+                        </h2>
+                        <span class="location-type">${location.type}</span>
+                    </div>
+
+                    <div class="location-image">
+                        <img src="${location.imageUrl}" alt="${location.name}" loading="lazy">
+                    </div>
+
+                    <div class="location-details">
+                        <p class="location-description">${location.description}</p>
+                        
+                        <div class="location-facilities">
+                            <h3>Available Facilities:</h3>
+                            <ul>
+                                ${location.facilities.map(facility => `
+                                    <li><i class="fas fa-check"></i> ${facility}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+
+                        <div class="location-coordinates">
+                            <p>
+                                <i class="fas fa-map-marker-alt"></i>
+                                Coordinates: ${location.coordinates.lat}, ${location.coordinates.lng}
+                            </p>
+                        </div>
+
+                        ${location.nearbyAttractions.length ? `
+                            <div class="nearby-attractions">
+                                <h3>Nearby Attractions:</h3>
+                                <ul>
+                                    ${location.nearbyAttractions.map(attraction => `
+                                        <li><i class="fas fa-landmark"></i> ${attraction}</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+
+                        <div class="contact-info">
+                            <p>
+                                <i class="fas fa-phone"></i>
+                                Contact: ${location.contactInfo}
+                            </p>
+                        </div>
+                    </div>
+
+                    ${showNavigation ? `
+                        <div class="location-navigation">
+                            ${location.prevLocation ? `
+                                <button class="nav-btn prev" onclick="scrollToLocation(${location.prevLocation})">
+                                    <i class="fas fa-arrow-left"></i> Previous Location
+                                </button>
+                            ` : ''}
+                            ${location.nextLocation ? `
+                                <button class="nav-btn next" onclick="scrollToLocation(${location.nextLocation})">
+                                    Next Location <i class="fas fa-arrow-right"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+                </article>
+            `;
+        }
+
+        // Add additional CSS for new components
+        document.head.insertAdjacentHTML('beforeend', `
+            <style>
+                .location-card {
+                    transition: transform 0.3s ease;
+                }
+
+                .location-card:hover {
+                    transform: translateY(-4px);
+                }
+
+                .location-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 1rem;
+                }
+
+                .location-title {
+                    font-size: 1.5rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+
+                .location-type {
+                    background: var(--primary);
+                    color: white;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 1rem;
+                    font-size: 0.875rem;
+                }
+
+                .location-image {
+                    width: 100%;
+                    height: 200px;
+                    overflow: hidden;
+                    border-radius: 8px;
+                    margin-bottom: 1rem;
+                }
+
+                .location-image img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+
+                .location-facilities ul,
+                .nearby-attractions ul {
+                    list-style: none;
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 0.5rem;
+                    margin: 0.5rem 0;
+                }
+
+                .nav-btn {
+                    background: var(--primary);
+                    color: white;
+                    border: none;
+                    padding: 0.5rem 1rem;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    transition: background-color 0.3s;
+                }
+
+                .nav-btn:hover {
+                    background: var(--primary-light);
+                }
+
+                .location-navigation {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 1rem;
+                    padding-top: 1rem;
+                    border-top: 1px solid var(--border);
+                }
+
+                @media (max-width: 768px) {
+                    .location-facilities ul,
+                    .nearby-attractions ul {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .location-navigation {
+                        flex-direction: column;
+                        gap: 0.5rem;
+                    }
+
+                    .nav-btn {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                }
+            </style>
+        `);
+
+
+// Add these styles to the existing styles section
+const newStyles = `
+.route-point {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.route-point.nearest {
+    transform: scale(1.1);
+    position: relative;
+}
+
+.route-point.nearest::before {
+    content: '📍 You are near here';
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-5px); }
+}
+
+.route-point:not(.nearest) {
+    opacity: 0.7;
+}`;
+
+// Add the styles to the document
+document.head.insertAdjacentHTML('beforeend', `<style>${newStyles}</style>`);
+
+// Update the updateNearestLocationInfo function
+function updateNearestLocationInfo(nearest) {
+    const locationInfo = document.getElementById('location-info');
+    if (nearest.location) {
+        // Update location info card
+        locationInfo.innerHTML = `
+            <h3>Nearest Location</h3>
+            <p><strong>${nearest.location.name}</strong></p>
+            <p>Distance: ${nearest.distance.toFixed(1)} km</p>
+            <p>Type: ${nearest.location.type}</p>
+            <button onclick="scrollToLocation(${nearest.location.id})" class="filter-btn">
+                <i class="fas fa-map-marker-alt"></i> View Details
+            </button>
+        `;
+
+        // Update route visualization
+        const routePoints = document.querySelectorAll('.route-point');
+        routePoints.forEach(point => {
+            point.classList.remove('nearest');
+            if (point.querySelector('.point-label').textContent === nearest.location.name) {
+                point.classList.add('nearest');
+            }
+        });
+    }
+}
+
+// Update the initializeRouteVisualization function
+function initializeRouteVisualization() {
+    const routeMap = document.getElementById('routeMap');
+    routeMap.innerHTML = locations.map(location => `
+        <div class="route-point" id="route-point-${location.id}">
+            <div class="point-icon">
+                <i class="fas fa-${location.icon}"></i>
+            </div>
+            <span class="point-label">${location.name}</span>
+        </div>
+    `).join('');
+}
+    </script>
 </body>
 </html>
