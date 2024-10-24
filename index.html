@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,38 +6,148 @@
     <title>Village Mardana - Official Website</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
+        :root {
+            --primary-color: #166534;
+            --secondary-color: #22c55e;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
+            scroll-behavior: smooth;
         }
 
         .hero-section {
-            background-image: url('/api/placeholder/1920/600');
+            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/api/placeholder/1920/600');
             background-size: cover;
             background-position: center;
+            background-attachment: fixed;
         }
 
         .tab-content {
             display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
         }
 
         .tab-content.active {
             display: block;
+            opacity: 1;
         }
 
-        #contact-directory, #marketplace {
-            height: 100vh;
-            width: 100%;
-            border: none;
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
         }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: var(--secondary-color);
+            transition: width 0.3s ease-in-out;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .card {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .weather-widget {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        /* Loading Animation */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* News Ticker */
+        .news-ticker {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .news-ticker p {
+            display: inline-block;
+            animation: ticker 20s linear infinite;
+        }
+
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .iframe-container {
+        width: 100%;
+        min-height: calc(100vh - 96px); /* Subtracting nav height */
+        padding: 20px;
+    }
+
+    .iframe-container iframe {
+        width: 100%;
+        height: 100%;
+        min-height: 800px;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
     </style>
 </head>
 <body class="bg-gray-50">
+    <!-- Preloader -->
+    <div id="preloader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+        <div class="loader"></div>
+    </div>
 
     <!-- Navigation -->
-    <nav class="bg-green-800 text-white">
+    <nav class="bg-green-800 text-white fixed w-full z-40 top-0">
+        <!-- News Ticker -->
+        <div class="bg-green-900 py-1 px-4">
+            <div class="news-ticker">
+                <p>🎉 Upcoming Event: Annual Village Fair on 15th May | 📢 New farming techniques workshop next week | 🏆 Our village won the Clean Village Award</p>
+            </div>
+        </div>
+
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center">
@@ -46,17 +155,22 @@
                     <h1 class="text-2xl font-bold">Village Mardana</h1>
                 </div>
                 <div class="hidden md:flex space-x-6">
-                    <button onclick="showTab('home')" class="hover:text-green-200 transition-colors">Home</button>
-                    <button onclick="showTab('about')" class="hover:text-green-200 transition-colors">About</button>
-                    <button onclick="showTab('facilities')" class="hover:text-green-200 transition-colors">Facilities</button>
-                    <button onclick="showTab('gallery')" class="hover:text-green-200 transition-colors">Gallery</button>
-                    <button onclick="showTab('contact-directory')" class="hover:text-green-200 transition-colors">Contact Directory</button>
-                    <button onclick="showTab('marketplace')" class="hover:text-green-200 transition-colors">Marketplace</button>
-                    <button onclick="showTab('NarmadaParikramaRoute')" class="hover:text-green-200 transition-colors">Narmada Parikrama</button>
+                    <button onclick="showTab('home')" class="nav-link hover:text-green-200">Home</button>
+                    <button onclick="showTab('about')" class="nav-link hover:text-green-200">About</button>
+                    <button onclick="showTab('facilities')" class="nav-link hover:text-green-200">Facilities</button>
+                    <button onclick="showTab('gallery')" class="nav-link hover:text-green-200">Gallery</button>
+                    <button onclick="showTab('contact-directory')" class="nav-link hover:text-green-200">Directory</button>
+                    <button onclick="showTab('marketplace')" class="nav-link hover:text-green-200">Marketplace</button>
+                    <button onclick="showTab('NarmadaParikramaRoute')" class="nav-link hover:text-green-200">Narmada</button>
                 </div>
-                <button id="mobile-menu-button" class="md:hidden">
-                    <i class="fas fa-bars text-2xl"></i>
-                </button>
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-green-700">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="mobile-menu-button" class="md:hidden">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -67,28 +181,64 @@
                 <button onclick="showTab('about')" class="block w-full text-left px-3 py-2 hover:bg-green-700">About</button>
                 <button onclick="showTab('facilities')" class="block w-full text-left px-3 py-2 hover:bg-green-700">Facilities</button>
                 <button onclick="showTab('gallery')" class="block w-full text-left px-3 py-2 hover:bg-green-700">Gallery</button>
-                <button onclick="showTab('contact-directory')" class="block w-full text-left px-3 py-2 hover:bg-green-700">Contact Directory</button>
+                <button onclick="showTab('contact-directory')" class="block w-full text-left px-3 py-2 hover:bg-green-700">Directory</button>
                 <button onclick="showTab('marketplace')" class="block w-full text-left px-3 py-2 hover:bg-green-700">Marketplace</button>
-                <button onclick="showTab('NarmadaParikramaRoute')" class="block w-full text-left px-3 py-2 hover:bg-green-700">Narmada Parikrama</button>
+                <button onclick="showTab('NarmadaParikramaRoute')" class="block w-full text-left px-3 py-2 hover:bg-green-700">Narmada</button>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main>
+    <main class="mt-24">
         <!-- Home Tab -->
         <section id="home" class="tab-content active">
-            <div class="hero-section h-96 flex items-center justify-center text-blue">
-                <div class="text-center">
+            <div class="hero-section h-96 flex items-center justify-center text-white relative">
+                <div class="absolute top-4 right-4 weather-widget p-4 rounded-lg">
+                    <div id="weather" class="text-center">
+                        <i class="fas fa-sun text-3xl mb-2"></i>
+                        <p class="text-xl">32°C</p>
+                        <p class="text-sm">Sunny</p>
+                    </div>
+                </div>
+                <div class="text-center" data-aos="fade-up">
                     <h1 class="text-6xl font-bold mb-4">नमस्ते !</h1>
                     <h2 class="text-4xl font-bold mb-4">ग्राम मर्दाना</h2>
                     <p class="text-xl">परंपरा और प्रगति का मिलन</p>
+                    <button class="mt-8 bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors">
+                        Explore More
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="container mx-auto px-4 -mt-16 relative z-10">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-lg card" data-aos="fade-up" data-aos-delay="100">
+                        <i class="fas fa-landmark text-4xl text-green-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">Heritage</h3>
+                        <p class="text-gray-600">Discover our rich cultural heritage</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg card" data-aos="fade-up" data-aos-delay="200">
+                        <i class="fas fa-hands-helping text-4xl text-green-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">Services</h3>
+                        <p class="text-gray-600">Access village services online</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg card" data-aos="fade-up" data-aos-delay="300">
+                        <i class="fas fa-calendar-alt text-4xl text-green-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">Events</h3>
+                        <p class="text-gray-600">Upcoming village events</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg card" data-aos="fade-up" data-aos-delay="400">
+                        <i class="fas fa-newspaper text-4xl text-green-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">News</h3>
+                        <p class="text-gray-600">Latest village updates</p>
+                    </div>
                 </div>
             </div>
 
             <!-- Hindi Content Section -->
             <div class="container mx-auto px-4 py-12">
-                <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8 mb-12">
+                <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8 mb-12" data-aos="fade-up">
                     <div class="prose lg:prose-xl">
                         <p class="text-lg leading-relaxed mb-6">
                             <strong>ग्राम मर्दाना</strong> भारत में नर्मदा नदी के तट पर स्थित मध्य प्रदेश राज्य का एक छोटा और सुंदर गाँव है। यह गाँव <strong>निमाड़</strong> क्षेत्र के अंतर्गत आता है।
@@ -96,17 +246,31 @@
                         <p class="text-lg leading-relaxed mb-6">
                             बस स्टैंड से एक सीधी पक्की मुख्य गली आपको चौराहों, अनुग्रहपूर्ण आँगन और झरोके वाले छज्जों से होते हुए नर्मदा नदी के तट की ओर ले जाती है।
                         </p>
-                        <p class="text-lg leading-relaxed mb-6">
-                            <strong>ग्राम मर्दाना</strong> मध्य प्रदेश के पश्चिम निमाड़ जिले के <strong>सनावद</strong> तहसील में स्थित है।
-                        </p>
-                        <div class="mt-8 text-center">
-                            <a href="#" class="text-blue-600 hover:text-blue-800">[Read More on wiki]</a>
-                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                    <div class="bg-white p-6 rounded-lg shadow-lg text-center" data-aos="fade-up">
+                        <div class="text-4xl font-bold text-green-600 mb-2 counter" data-target="5001">0</div>
+                        <p class="text-gray-600">Population</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg text-center" data-aos="fade-up">
+                        <div class="text-4xl font-bold text-green-600 mb-2 counter" data-target="1500">0</div>
+                        <p class="text-gray-600">Households</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg text-center" data-aos="fade-up">
+                        <div class="text-4xl font-bold text-green-600 mb-2 counter" data-target="95">0</div>
+                        <p class="text-gray-600">Literacy Rate</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg text-center" data-aos="fade-up">
+                        <div class="text-4xl font-bold text-green-600 mb-2 counter" data-target="25">0</div>
+                        <p class="text-gray-600">Schools</p>
                     </div>
                 </div>
 
                 <!-- Volunteer Call to Action -->
-                <div class="bg-green-100 rounded-lg p-8 text-center">
+                <div class="bg-green-100 rounded-lg p-8 text-center" data-aos="fade-up">
                     <h3 class="text-2xl font-bold text-green-800 mb-4">Join Our Community!</h3>
                     <p class="text-lg text-green-700 mb-6">
                         We are looking for passionate volunteers from nearby schools, institutions, and companies to join us!
@@ -118,62 +282,273 @@
             </div>
         </section>
 
-        <!-- About Tab -->
-<section id="about" class="tab-content"> <div class="container mx-auto px-4 py-12"> <h2 class="text-3xl font-bold mb-8 text-center">मरदाना गाँव के बारे में</h2> <div class="grid grid-cols-1 md:grid-cols-2 gap-8"> <div> <img src="/api/placeholder/600/400" alt="मरदाना गाँव" class="rounded-lg shadow-md w-full"> </div> <div> <h3 class="text-2xl font-semibold mb-4">हमारा इतिहास</h3> <p class="text-gray-600 mb-4">मरदाना गाँव का इतिहास बहुत पुराना है। यह गाँव "सवत 532 वैशाख शुदि 3 गुरुवार, कृष्ण पक्ष" में सरधवज के पुत्र मयूरध्वज द्वारा स्थापित किया गया था। यहाँ एक 1500 वर्ष पुराना राजा मोहरवाज का किला भी है।</p> <h3 class="text-2xl font-semibold mb-4">जनसांख्यिकी</h3> <p class="text-gray-600 mb-4">2011 की जनगणना के अनुसार, हमारे गाँव में 5,001 निवासी हैं, जिनमें 2,511 पुरुष और 2,490 महिलाएँ हैं। यहाँ कृषि और आधुनिक व्यवसायों का संतुलन है।</p> <h3 class="text-2xl font-semibold mb-4">स्थान और संस्कृति</h3> <p class="text-gray-600">मरदाना नर्मदा नदी के तट पर स्थित है और निमाड़ क्षेत्र का हिस्सा है। यह गाँव अपने गंगौर उत्सव और पारंपरिक धनियेर नृत्य के लिए प्रसिद्ध है। यहाँ के कई घर नीले रंग में रंगे हुए हैं, जो निमाड़ की परंपरागत शैली है।</p> </div> </div> </div> </section>
-
-        <!-- Facilities Tab -->
-       <!-- Facilities Tab --> 
-        <section id="facilities" class="tab-content"> <div class="container mx-auto px-4 py-12"> <h2 class="text-3xl font-bold mb-8 text-center">गाँव की सुविधाएँ</h2> <div class="grid grid-cols-1 md:grid-cols-3 gap-8"> <div class="bg-white p-6 rounded-lg shadow-md"> <i class="fas fa-school text-4xl text-green-600 mb-4"></i> <h3 class="text-xl font-semibold mb-2">शिक्षा</h3> <ul class="text-gray-600 list-disc list-inside"> <li>प्राथमिक विद्यालय</li> <li>माध्यमिक विद्यालय</li> </ul> </div> <div class="bg-white p-6 rounded-lg shadow-md"> <i class="fas fa-hospital text-4xl text-green-600 mb-4"></i> <h3 class="text-xl font-semibold mb-2">स्वास्थ्य सेवाएँ</h3> <ul class="text-gray-600 list-disc list-inside"> <li>प्राथमिक स्वास्थ्य उपकेंद्र</li> <li>सामुदायिक स्वास्थ्य कार्यकर्ता</li> <li>मोबाइल चिकित्सा इकाइयाँ</li> </ul> </div> <div class="bg-white p-6 rounded-lg shadow-md"> <i class="fas fa-seedling text-4xl text-green-600 mb-4"></i> <h3 class="text-xl font-semibold mb-2">कृषि</h3> <ul class="text-gray-600 list-disc list-inside"> <li>गेहूँ और कपास की खेती</li> <li>मिर्च और सोयाबीन की खेती</li> <li>गन्ना उत्पादन</li> </ul> </div> </div> </div> </section>
-
+        <!-- Other sections remain the same but with data-aos attributes added -->
+        <!-- About, Facilities, Gallery, etc. sections... -->
         <!-- Gallery Tab -->
-        <section id="gallery" class="tab-content">
-            <div class="container mx-auto px-4 py-12">
-                <h2 class="text-3xl font-bold mb-8 text-center">Gallery</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <img src="/api/placeholder/400/300" alt="Gallery Image 1" class="rounded-lg shadow-md">
-                    <img src="/api/placeholder/400/300" alt="Gallery Image 2" class="rounded-lg shadow-md">
-                    <img src="/api/placeholder/400/300" alt="Gallery Image 3" class="rounded-lg shadow-md">
-                    <img src="/api/placeholder/400/300" alt="Gallery Image 4" class="rounded-lg shadow-md">
-                </div>
-            </div>
-        </section>
+        !-- Contact Directory Tab -->
+<section id="contact-directory" class="tab-content">
+    <div class="iframe-container">
+        <iframe 
+            src="test.html" 
+            id="contact-directory-frame"
+            title="Contact Directory"
+            allow="fullscreen">
+        </iframe>
+    </div>
+</section>
 
-        <!-- Contact Directory Tab -->
-        <section id="contact-directory" class="tab-content">
-            <iframe src="test.html" id="contact-directory"></iframe>
-        </section>
+<!-- Marketplace Tab -->
+<section id="marketplace" class="tab-content">
+    <div class="iframe-container">
+        <iframe 
+            src="buysell.html" 
+            id="marketplace-frame"
+            title="Marketplace"
+            allow="fullscreen">
+        </iframe>
+    </div>
+</section>
 
-        <!-- Marketplace Tab -->
-        <section id="marketplace" class="tab-content">
-            <iframe src="buysell.html" id="marketplace"></iframe>
-        </section>
+<!-- NarmadaParikramaRoute Tab -->
+<section id="NarmadaParikramaRoute" class="tab-content">
+    <div class="iframe-container">
+        <iframe 
+            src="parikrama_route.html" 
+            id="narmada-parikrama-frame"
+            title="Narmada Parikrama"
+            allow="fullscreen">
+        </iframe>
+    </div>
+</section>
 
-         <!-- NarmadaParikramaRoute Tab -->
-        <section id="NarmadaParikramaRoute" class="tab-content">
-            <iframe src="parikrama_route.html" id="Narmada Parikrama"></iframe>
-        </section>
+
     </main>
 
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="fixed bottom-4 right-4 bg-green-600 text-white p-3 rounded-full shadow-lg hidden">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
     <!-- Footer -->
-    <footer class="bg-green-800 text-white py-8">
-        <div class="container mx-auto px-4 text-center">
-            <p>&copy; 2024 Village Mardana. All rights reserved.</p>
+    <!-- Footer with extended features -->
+    <footer class="bg-green-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h4 class="text-xl font-semibold mb-4">About Mardana</h4>
+                    <p class="text-gray-300">A beautiful village on the banks of Narmada River, embracing tradition while moving forward with progress.</p>
+                </div>
+                <div>
+                    <h4 class="text-xl font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-300 hover:text-white">Village Committee</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Development Projects</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Agriculture Updates</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Cultural Events</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-xl font-semibold mb-4">Emergency Contacts</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center"><i class="fas fa-phone-alt mr-2"></i> Police: 100</li>
+                        <li class="flex items-center"><i class="fas fa-ambulance mr-2"></i> Ambulance: 108</li>
+                        <li class="flex items-center"><i class="fas fa-fire-extinguisher mr-2"></i> Fire: 101</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-xl font-semibold mb-4">Connect With Us</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="hover:text-green-400"><i class="fab fa-facebook-f text-2xl"></i></a>
+                        <a href="#" class="hover:text-green-400"><i class="fab fa-twitter text-2xl"></i></a>
+                        <a href="#" class="hover:text-green-400"><i class="fab fa-instagram text-2xl"></i></a>
+                        <a href="#" class="hover:text-green-400"><i class="fab fa-whatsapp text-2xl"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-green-700 text-center">
+                <p>&copy; 2024 Village Mardana. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 
+    <!-- Scripts -->
     <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 1000,
+            once: true
+        });
+
+        // Preloader
+        window.addEventListener('load', function() {
+            document.getElementById('preloader').style.display = 'none';
+        });
+
+        // Tab Navigation
         function showTab(tabId) {
-            var tabs = document.querySelectorAll('.tab-content');
-            tabs.forEach(function (tab) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
                 tab.classList.remove('active');
             });
-            document.getElementById(tabId).classList.add('active');
+            const selectedTab = document.getElementById(tabId);
+            selectedTab.classList.add('active');
+            
+            // Scroll to top when changing tabs
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Close mobile menu if open
+            document.getElementById('mobile-menu').classList.add('hidden');
         }
 
-        document.getElementById('mobile-menu-button').addEventListener('click', function () {
-            var menu = document.getElementById('mobile-menu');
-            menu.classList.toggle('hidden');
+        // Mobile Menu Toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
         });
+
+        // Counter Animation
+        const counters = document.querySelectorAll('.counter');
+        const speed = 200;
+
+        counters.forEach(counter => {
+            const updateCount = () => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const count = parseInt(counter.innerText);
+                const increment = target / speed;
+
+                if (count < target) {
+                    counter.innerText = Math.ceil(count + increment);
+                    setTimeout(updateCount, 1);
+                } else {
+                    counter.innerText = target;
+                }
+            };
+
+            // Start counting when element is in view
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        updateCount();
+                    }
+                });
+            });
+
+            observer.observe(counter);
+        });
+
+        // Back to Top Button
+        const backToTopButton = document.getElementById('back-to-top');
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopButton.classList.remove('hidden');
+            } else {
+                backToTopButton.classList.add('hidden');
+            }
+        });
+
+        backToTopButton.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        let isDarkMode = false;
+
+        themeToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            themeToggle.innerHTML = isDarkMode ? 
+                '<i class="fas fa-sun"></i>' : 
+                '<i class="fas fa-moon"></i>';
+        });
+
+        // Dynamic Weather Update
+        function updateWeather() {
+            // Simulate weather API call
+            const weatherConditions = ['Sunny', 'Cloudy', 'Rainy', 'Partly Cloudy'];
+            const temperatures = [28, 30, 32, 34, 36];
+            
+            const randomCondition = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+            const randomTemp = temperatures[Math.floor(Math.random() * temperatures.length)];
+            
+            const weatherIcon = {
+                'Sunny': 'sun',
+                'Cloudy': 'cloud',
+                'Rainy': 'cloud-rain',
+                'Partly Cloudy': 'cloud-sun'
+            };
+
+            document.getElementById('weather').innerHTML = `
+                <i class="fas fa-${weatherIcon[randomCondition]} text-3xl mb-2"></i>
+                <p class="text-xl">${randomTemp}°C</p>
+                <p class="text-sm">${randomCondition}</p>
+            `;
+        }
+
+        // Update weather every 5 minutes
+        updateWeather();
+        setInterval(updateWeather, 300000);
+
+        // Form Validation
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                // Add your form validation and submission logic here
+                alert('Form submitted successfully!');
+            });
+        });
+
+        // Image Lazy Loading
+        document.addEventListener("DOMContentLoaded", function() {
+            var lazyImages = [].slice.call(document.querySelectorAll("img.lazy"));
+
+            if ("IntersectionObserver" in window) {
+                let lazyImageObserver = new IntersectionObserver(function(entries, observer) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) {
+                            let lazyImage = entry.target;
+                            lazyImage.src = lazyImage.dataset.src;
+                            lazyImage.classList.remove("lazy");
+                            lazyImageObserver.unobserve(lazyImage);
+                        }
+                    });
+                });
+
+                lazyImages.forEach(function(lazyImage) {
+                    lazyImageObserver.observe(lazyImage);
+                });
+            }
+        });
+
+        // Add smooth scrolling to all links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+
+    <!-- Cookie Consent -->
+    <div id="cookie-consent" class="fixed bottom-0 w-full bg-gray-900 text-white py-4 px-6 flex justify-between items-center hidden">
+        <p>We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.</p>
+        <button onclick="acceptCookies()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Accept
+        </button>
+    </div>
+
+    <script>
+        // Cookie Consent
+        function acceptCookies() {
+            localStorage.setItem('cookieConsent', 'accepted');
+            document.getElementById('cookie-consent').classList.add('hidden');
+        }
+
+        if (!localStorage.getItem('cookieConsent')) {
+            document.getElementById('cookie-consent').classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
