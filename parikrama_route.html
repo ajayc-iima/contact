@@ -3,627 +3,415 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Narmada River Route - Interactive Guide</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Narmada River Explorer Pro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Theme Variables */
         :root {
-            --primary: #3b82f6;
-            --primary-light: #60a5fa;
-            --bg-light: #f8fafc;
-            --text-light: #1e293b;
-            --card-light: #ffffff;
-            --border-light: #e2e8f0;
-            --bg-dark: #0f172a;
-            --text-dark: #e2e8f0;
-            --card-dark: #1e293b;
-            --border-dark: #334155;
+            --primary-color: #2e5090;
+            --secondary-color: #4CAF50;
+            --accent-color: #FFC107;
+            --text-color: #333;
+            --background-color: #f5f5f5;
+            --danger-color: #dc3545;
         }
 
-        [data-theme="dark"] {
-            --bg: var(--bg-dark);
-            --text: var(--text-dark);
-            --card: var(--card-dark);
-            --border: var(--border-dark);
-        }
-
-        [data-theme="light"] {
-            --bg: var(--bg-light);
-            --text: var(--text-light);
-            --card: var(--card-light);
-            --border: var(--border-light);
-        }
-
-        /* Base Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        body, html { 
+            margin: 0; 
+            padding: 0; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--background-color);
+            color: var(--text-color);
         }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
             padding: 20px;
-            transition: background-color 0.3s, color 0.3s;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        /* Header Styles */
         .header {
-            background: var(--card);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 20px;
-            z-index: 100;
-            transition: background-color 0.3s;
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: linear-gradient(135deg, var(--primary-color), #1a365d);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
 
         .title {
-            font-size: 24px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        /* Controls and Buttons */
-        .controls {
-            display: flex;
-            gap: 12px;
-        }
-
-        .theme-toggle, .control-button {
-            background: none;
-            border: 2px solid var(--border);
-            color: var(--text);
-            padding: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        /* Search and Filters */
-        .search-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto 20px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 20px 12px 40px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: var(--card);
-            color: var(--text);
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text);
-            opacity: 0.5;
-        }
-
-        /* Map Styles */
-        #map {
-            height: 400px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        .location-info {
-            background: var(--card);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        /* Location Cards */
-        .location-card {
-            background: var(--card);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-
-        /* Rest of your existing CSS */
-         :root {
-            --primary: #3b82f6;
-            --primary-light: #60a5fa;
-            --bg-light: #f8fafc;
-            --text-light: #1e293b;
-            --card-light: #ffffff;
-            --border-light: #e2e8f0;
-            --bg-dark: #0f172a;
-            --text-dark: #e2e8f0;
-            --card-dark: #1e293b;
-            --border-dark: #334155;
-        }
-
-        [data-theme="dark"] {
-            --bg: var(--bg-dark);
-            --text: var(--text-dark);
-            --card: var(--card-dark);
-            --border: var(--border-dark);
-        }
-
-        [data-theme="light"] {
-            --bg: var(--bg-light);
-            --text: var(--text-light);
-            --card: var(--card-light);
-            --border: var(--border-light);
-        }
-
-        * {
+            font-size: 2.5em;
             margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding: 20px;
-            transition: background-color 0.3s, color 0.3s;
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin: 10px 0;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: var(--card);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 20px;
-            z-index: 100;
-            transition: background-color 0.3s;
-        }
-
-        .header-top {
+        .controls {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
         }
 
-        .title {
-            font-size: 24px;
-            font-weight: 600;
+        .controls-left, .controls-right {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            gap: 15px;
         }
 
-        .controls {
-            display: flex;
-            gap: 12px;
-        }
-
-        .theme-toggle, .control-button {
-            background: none;
-            border: 2px solid var(--border);
-            color: var(--text);
-            padding: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .search-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto 20px;
-        }
-
-        .search-input {
-            width: 100%;
+        .view-button {
             padding: 12px 20px;
-            padding-left: 40px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: var(--card);
-            color: var(--text);
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text);
-            opacity: 0.5;
-        }
-
-        .filters {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 8px 16px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: var(--card);
-            color: var(--text);
             cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            color: var(--primary-color);
+            font-weight: bold;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .filter-btn:hover, .theme-toggle:hover, .control-button:hover {
-            border-color: var(--primary);
-            color: var(--primary);
+        .view-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .filter-btn.active {
-            background: var(--primary);
+        .view-button.active {
+            background: var(--primary-color);
             color: white;
-            border-color: var(--primary);
         }
 
-        .location-card {
-            background: var(--card);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .location-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .location-header {
+        .weather-display {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 8px;
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .location-title-section {
-            display: flex;
+            align-items: center;
             gap: 15px;
-            align-items: center;
         }
 
-        .location-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: white;
-        }
-
-        .location-info h3 {
-            font-size: 20px;
-            margin-bottom: 5px;
-        }
-
-        .location-type {
-            font-size: 14px;
-            opacity: 0.7;
-        }
-
-        .location-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border);
-        }
-
-        .detail-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-        }
-
-        .facilities-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .facility-tag {
-            background: var(--primary);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .route-visualization {
-            background: var(--card);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-            border: 1px solid var(--border);
-            overflow-x: auto;
-        }
-
-        .route-map {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            min-width: max-content;
-            padding: 20px 0;
-            position: relative;
-        }
-
-        .route-point {
+        .weather-details {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            position: relative;
-            margin: 0 40px;
+            gap: 5px;
         }
 
-        .route-point:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            right: -40px;
-            top: 25px;
-            width: 40px;
-            height: 2px;
-            background: var(--primary);
+        .weather-metric {
+            font-size: 0.9em;
+            color: #666;
         }
 
-        .point-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 10px;
-            z-index: 1;
-        }
-
-        .point-label {
-            font-size: 12px;
-            text-align: center;
-            max-width: 100px;
-        }
-
-        .expanded-content {
+        .map-container {
+            height: 600px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             display: none;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border);
+            position: relative;
         }
 
-        .expanded-content.active {
+        .map-container.active {
             display: block;
         }
 
-        .expand-button {
-            background: none;
-            border: none;
-            color: var(--primary);
-            cursor: pointer;
-            font-size: 14px;
-            padding: 5px 10px;
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: color 0.3s ease;
-        }
-
-        .expand-button:hover {
-            color: var(--primary-light);
-        }
-
-        .no-results {
-            text-align: center;
+        .locations-grid {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
             padding: 20px;
-            background: var(--card);
+        }
+
+        .locations-grid.active {
+            display: grid;
+        }
+
+        .location-item {
+            background: white;
+            padding: 20px;
             border-radius: 12px;
-            margin-top: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                position: static;
-            }
-
-            .header-top {
-                flex-direction: column;
-                gap: 16px;
-            }
-
-            .location-header {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-
-        .location-image {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin: 15px 0;
-        }
-
-        .attractions-list {
-            list-style: none;
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-
-        .attractions-list li {
-            margin-bottom: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            cursor: pointer;
             position: relative;
         }
 
-        .attractions-list li::before {
-            content: "•";
-            color: var(--primary);
+        .location-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .location-status {
             position: absolute;
-            left: -15px;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
         }
 
-        .navigation-links {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border);
+        .status-visited {
+            background: var(--secondary-color);
+            color: white;
         }
 
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--primary);
-            cursor: pointer;
+        .status-next {
+            background: var(--accent-color);
+            color: black;
+        }
+
+        .status-locked {
+            background: #666;
+            color: white;
+        }
+
+        .location-details {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
             background: none;
             border: none;
-            font-size: 14px;
-            transition: color 0.3s ease;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #666;
         }
 
-        .nav-link:hover {
-            color: var(--primary-light);
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
         }
-        /* ... (Include all the remaining CSS from the original file) */
+
+        .gallery-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-image:hover {
+            transform: scale(1.05);
+        }
+
+        .progress-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--secondary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(46, 80, 144, 0.1);
+            border-radius: 8px;
+        }
+
+        .custom-marker-container {
+            background: none;
+            border: none;
+        }
+
+        .custom-marker {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .achievement {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-color);
+            color: black;
+            padding: 15px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translate(-50%, 100%); }
+            to { transform: translate(-50%, 0); }
+        }
+
+        .offline-warning {
+            background: var(--danger-color);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            display: none;
+        }
     </style>
 </head>
-<body data-theme="light">
+<body>
+    <div class="offline-warning" id="offlineWarning">
+        You are currently offline. Some features may be limited.
+    </div>
     <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-top">
-                <h1 class="title">
-                    <i class="fas fa-map-marked-alt"></i>
-                    Narmada River Route
-                </h1>
-                <div class="controls">
-                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                        <i class="fas fa-moon"></i>
+        <header class="header animate__animated animate__fadeIn">
+            <h1 class="title">🏛️ Narmada River Explorer Pro</h1>
+            <p class="subtitle">Discover the sacred sites along India's holiest river</p>
+            
+            <div class="controls">
+                <div class="controls-left">
+                    <button onclick="toggleView('map')" class="view-button active" id="mapViewBtn">
+                        <i class="fas fa-map-marked-alt"></i> Map View
                     </button>
-                    <button class="control-button" id="helpButton" aria-label="Help">
-                        <i class="fas fa-question-circle"></i>
+                    <button onclick="toggleView('list')" class="view-button" id="listViewBtn">
+                        <i class="fas fa-list"></i> List View
                     </button>
-                    <button class="control-button" id="locationButton" aria-label="Get location">
-                        <i class="fas fa-location-arrow"></i>
+                    <button onclick="locateUser()" class="view-button">
+                        <i class="fas fa-location-arrow"></i> Find Me
                     </button>
                 </div>
-            </div>
-            
-            <!-- Search -->
-            <div class="search-container">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" id="searchInput" placeholder="Search locations, types, or facilities..." aria-label="Search">
-            </div>
-
-            <!-- Filters -->
-            <div class="filters" role="toolbar" aria-label="Location filters">
-                <button class="filter-btn active" data-filter="all">
-                    <i class="fas fa-globe"></i>
-                    All Locations
-                </button>
-                <button class="filter-btn" data-filter="temple">
-                    <i class="fas fa-temple"></i>
-                    Temples
-                </button>
-                <button class="filter-btn" data-filter="ann-kshetra">
-                    <i class="fas fa-utensils"></i>
-                    Ann Kshetra
-                </button>
-                <button class="filter-btn" data-filter="ashram">
-                    <i class="fas fa-om"></i>
-                    Ashrams
-                </button>
-                <button class="filter-btn" data-filter="ghat">
-                    <i class="fas fa-water"></i>
-                    Ghats
-                </button>
-                <button class="filter-btn" data-filter="village">
-                    <i class="fas fa-house"></i>
-                    Villages
-                </button>
+                <div class="weather-display">
+                    <i class="fas fa-sun" style="color: #FFC107; font-size: 24px;"></i>
+                    <div class="weather-details">
+                        <div id="currentTemp">Loading...</div>
+                        <div class="weather-metric" id="humidity"></div>
+                        <div class="weather-metric" id="windSpeed"></div>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <!-- Map Section -->
-        <div id="map"></div>
-        <div id="location-info" class="location-info"></div>
-
-        <!-- Route Visualization -->
-        <div class="route-visualization" id="routeVisualization">
-            <h2>Route Overview</h2>
-            <div class="route-map" id="routeMap"></div>
+        <div class="progress-container">
+            <h3>Journey Progress</h3>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <i class="fas fa-check-circle"></i>
+                    <h4>Sites Visited</h4>
+                    <p id="visitedCount">0/0</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-road"></i>
+                    <h4>Distance Covered</h4>
+                    <p id="distanceCovered">0 km</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-clock"></i>
+                    <h4>Journey Time</h4>
+                    <p id="journeyTime">0h 0m</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-history"></i>
+                    <h4>Last Visit</h4>
+                    <p id="lastVisit">None</p>
+                </div>
+            </div>
         </div>
 
-        <!-- Locations List -->
-        <main id="locationsList" role="main" aria-live="polite"></main>
+        <main>
+            <div id="map" class="map-container active"></div>
+            <div id="locationsList" class="locations-grid"></div>
+        </main>
+
+        <div id="modalOverlay" class="modal-overlay"></div>
+        <div id="locationDetails" class="location-details"></div>
+        <div id="notification" class="notification"></div>
+        <div id="achievement" class="achievement"></div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <script>
-        // Data Structure
-        const locations = [
+        // Data structure for locations
+       const locations = [
     {
         id: 1,
         name: "Omkareshwar Temple",
@@ -669,14 +457,13 @@
         nearbyAttractions: ["Ancient Stone Carvings", "Sunset Point", "River View"],
         contactInfo: "Ghat Manager: +91 XXXXXXXXXX"
     },
-
-     {
+    {
         id: 4,
         name: "Tonksar (Gomukh Anna Kshetra)",
         type: "pilgrimage",
         icon: "temple",
         distance: 4,
-        coordinates: { lat:  22.190989, lng: 75.971231},
+        coordinates: { lat: 22.190989, lng: 75.971231 },
         facilities: ["Free meals", "Shelter", "Meditation Hall"],
         description: "Place offering free food to pilgrims, with a serene environment for meditation.",
         imageUrl: "/api/placeholder/800/400",
@@ -706,7 +493,7 @@
         type: "village",
         icon: "house",
         distance: 4,
-        coordinates: { lat: 22.188424, lng: 75.925668 }, 
+        coordinates: { lat: 22.188424, lng: 75.925668 },
         facilities: ["Restrooms", "Small Cafes", "Information Center"],
         description: "Village with basic facilities for travelers, known for its small cafes and local hospitality.",
         imageUrl: "/api/placeholder/800/400",
@@ -721,7 +508,7 @@
         type: "historical",
         icon: "memorial",
         distance: 6,
-        coordinates: { lat:  22.173403, lng:  75.876766 },  
+        coordinates: { lat: 22.173403, lng: 75.876766 },
         facilities: ["Parking", "Guide Services", "Historical Tours"],
         description: "Historical site of Bajirao's memorial, offering guided tours and exhibits on local history.",
         imageUrl: "/api/placeholder/800/400",
@@ -736,7 +523,7 @@
         type: "pilgrimage",
         icon: "temple",
         distance: 4,
-        coordinates: { lat:  22.169581, lng:75.848362 }, 
+        coordinates: { lat: 22.169581, lng: 75.848362 },
         facilities: ["Free meals", "Shelter", "Yoga Center"],
         description: "Anna Kshetra offering food to pilgrims, with a dedicated yoga center for visitors.",
         imageUrl: "/api/placeholder/800/400",
@@ -751,605 +538,484 @@
         type: "village",
         icon: "house",
         distance: 3,
-        coordinates: { lat:  22.173926, lng:  75.819249 }, 
+        coordinates: { lat: 22.173926, lng: 75.819249 },
         facilities: ["Local Food", "Shops", "Guesthouses"],
         description: "Village with basic necessities, known for its traditional guesthouses and local cuisine.",
         imageUrl: "/api/placeholder/800/400",
-        nextLocation: 10,
+        nextLocation: null,
         prevLocation: 8,
         nearbyAttractions: ["Local Handicrafts", "Traditional Houses", "Cultural Events"],
         contactInfo: "Village Council: +91 XXXXXXXXXX"
-    },
-
-
-    // Continuing to add more entries in the same format, based on the provided data
-    // ...
+    }
 ];
-        // Map Initialization
-        // Location tracking and mapping enhancements
-let userMarker = null;
-let userCircle = null;
-let map = null;
 
-// Initialize map with user location tracking
-function initMap() {
-    const narmadaCenter = [22.7519, 77.7289];
-    map = L.map('map').setView(narmadaCenter, 8);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
 
-    // Add markers for all locations
-    locations.forEach(location => {
-        const marker = L.marker([location.coordinates.lat, location.coordinates.lng])
-            .bindPopup(`
-                <b>${location.name}</b><br>
-                Type: ${location.type}<br>
-                Distance: <span id="distance-${location.id}">calculating...</span>
-            `)
-            .addTo(map);
-    });
 
-    // Start tracking user location
-    startLocationTracking();
-    
-    return map;
-}
-// Calculate distance between two points using Haversine formula
-function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth's radius in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-             Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-             Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-}
+        let map;
+        let currentLocationIndex = 0;
+        let journeyStartTime = null;
 
-// Start continuous location tracking
-function startLocationTracking() {
-    if ("geolocation" in navigator) {
-        // Watch position instead of getting it once
-        const watchId = navigator.geolocation.watchPosition(
-            position => updateUserLocation(position),
-            error => handleLocationError(error),
-            {
-                enableHighAccuracy: true,
-                timeout: 5000,
-                maximumAge: 0
-            }
-        );
-    } else {
-        alert('Geolocation is not supported by your browser.');
+        // Initialize the application
+        function initializeApp() {
+            initializeMap();
+            updateProgress();
+            updateWeatherDisplay();
+            startJourneyTimer();
+            renderLocationsList();
+            checkOnlineStatus();
+            loadSavedData();
+            updateDistanceCovered();
+updateJourneyTime();
+updateLastVisit();
+
+        }
+
+        function startJourneyTimer() {
+    if (!journeyStartTime && currentLocationIndex === 0) {
+        journeyStartTime = new Date();
+        saveData(); // Save the journey start time
     }
 }
 
-        // Route Visualization
-        function initializeRouteVisualization() {
-            const routeMap = document.getElementById('routeMap');
-            routeMap.innerHTML = locations.map(location => `
-                <div class="route-point">
-                    <div class="point-icon">
-                        <i class="fas fa-${location.icon}"></i>
+function updateJourneyTime() {
+    if (journeyStartTime) {
+        const currentTime = new Date();
+        const elapsedTime = currentTime - journeyStartTime; // Time in milliseconds
+
+        // Convert elapsed time to hours and minutes
+        const hours = Math.floor(elapsedTime / (1000 * 60 * 60));
+        const minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
+
+        document.getElementById('journeyTime').textContent = `${hours}h ${minutes}m`;
+    }
+}
+
+
+
+function updateWeatherDisplay() {
+    const weatherDisplay = document.querySelector('.weather-display');
+    const currentTemp = document.getElementById('currentTemp');
+    const humidity = document.getElementById('humidity');
+    const windSpeed = document.getElementById('windSpeed');
+
+    if (locations.length > 0) {
+        const weather = locations[currentLocationIndex].weather;
+        currentTemp.textContent = `Temperature: ${weather.temp}°C`;
+        humidity.textContent = `Humidity: ${weather.humidity}%`;
+        windSpeed.textContent = `Wind Speed: ${weather.windSpeed} km/h`;
+    } else {
+        weatherDisplay.style.display = 'none';
+    }
+}
+
+        // Check online status
+        function checkOnlineStatus() {
+            function updateOnlineStatus() {
+                const offlineWarning = document.getElementById('offlineWarning');
+                if (navigator.onLine) {
+                    offlineWarning.style.display = 'none';
+                } else {
+                    offlineWarning.style.display = 'block';
+                }
+            }
+
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+            updateOnlineStatus();
+        }
+
+        // Initialize Leaflet map
+        function initializeMap() {
+            if (map) {
+                map.remove();
+            }
+
+            map = L.map('map').setView([22.2394, 76.1514], 9);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            locations.forEach((location, index) => {
+                addLocationMarker(location, index);
+            });
+        }
+
+        // Toggle between map and list views
+        function toggleView(view) {
+    const mapContainer = document.getElementById('map');
+    const listContainer = document.getElementById('locationsList');
+    const mapButton = document.getElementById('mapViewBtn');
+    const listButton = document.getElementById('listViewBtn');
+
+    if (view === 'map') {
+        mapContainer.classList.add('active');
+        listContainer.classList.remove('active');
+        mapButton.classList.add('active');
+        listButton.classList.remove('active');
+
+        // Check if the map instance is already created
+        if (!map) {
+            initializeMap();
+        } else {
+            map.invalidateSize(); // Redraw map if container size changed
+        }
+    } else {
+        mapContainer.classList.remove('active');
+        listContainer.classList.add('active');
+        mapButton.classList.remove('active');
+        listButton.classList.add('active');
+        renderLocationsList();
+    }
+}
+
+
+        // Render locations list view
+        function renderLocationsList() {
+            const container = document.getElementById('locationsList');
+            container.innerHTML = locations.map((location, index) => `
+                <div class="location-item" onclick="showLocationDetails(${location.id})">
+                    <div class="location-status ${getLocationStatus(index)}">
+                        ${getLocationStatusText(index)}
                     </div>
-                    <span class="point-label">${location.name}</span>
+                    <img src="${location.image}" alt="${location.name}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">
+                    <h3>${location.name}</h3>
+                    <p>${location.description}</p>
+                    <div class="location-meta">
+                        <span><i class="fas fa-map-marker-alt"></i> ${location.distance}km</span>
+                        ${location.visited ? `
+                            <span><i class="fas fa-clock"></i> ${formatVisitTime(location.visitedTime)}</span>
+                        ` : ''}
+                    </div>
                 </div>
             `).join('');
         }
 
-        // Search and Filter
-        function initializeSearchAndFilter() {
-            const searchInput = document.getElementById('searchInput');
-            const filterButtons = document.querySelectorAll('.filter-btn');
-            const locationsList = document.getElementById('locationsList');
-
-            function updateLocations(searchTerm = '', filterType = 'all') {
-                const filteredLocations = locations.filter(location => {
-                    const matchesSearch = location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                        location.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                        location.facilities.some(f => f.toLowerCase().includes(searchTerm.toLowerCase()));
-                    
-                    const matchesFilter = filterType === 'all' || location.type === filterType;
-                    
-                    return matchesSearch && matchesFilter;
-                });
-
-                locationsList.innerHTML = filteredLocations.length ? 
-                    filteredLocations.map(location => createLocationCard(location, true)).join('') :
-                    '<div class="no-results">No locations found matching your criteria</div>';
-            }
-
-            // Event Listeners
-            searchInput.addEventListener('input', (e) => {
-                const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
-                updateLocations(e.target.value, activeFilter);
-            });
-
-            filterButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    filterButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    updateLocations(searchInput.value, button.dataset.filter);
-                });
-            });
-
-            // Initial load
-            updateLocations();
+        // Get location status class
+        function getLocationStatus(index) {
+            if (locations[index].visited) return 'status-visited';
+            if (index === currentLocationIndex) return 'status-next';
+            return 'status-locked';
         }
 
-        // Theme Toggle
-        function initializeThemeToggle() {
-            const themeToggle = document.getElementById('themeToggle');
-            const body = document.body;
-            const icon = themeToggle.querySelector('i');
+        // Get location status text
+        function getLocationStatusText(index) {
+            if (locations[index].visited) return 'Visited';
+            if (index === currentLocationIndex) return 'Next Stop';
+            return 'Locked';
+        }
 
-            themeToggle.addEventListener('click', () => {
-                const isDark = body.dataset.theme === 'dark';
-                body.dataset.theme = isDark ? 'light' : 'dark';
-                icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+        // Format visit time
+        function formatVisitTime(time) {
+            if (!time) return '';
+            return new Date(time).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             });
         }
 
-        // Utility Functions
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Earth's radius in km
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                     Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-
-        function scrollToLocation(locationId) {
-            const element = document.getElementById(`location-${locationId}`);
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-
-        // Update user's location on map
-function updateUserLocation(position) {
-    const userLat = position.coords.latitude;
-    const userLng = position.coords.longitude;
-    
-    // Remove existing user location markers
-    if (userMarker) map.removeLayer(userMarker);
-    if (userCircle) map.removeLayer(userCircle);
-    
-    // Add user location marker
-    const userIcon = L.divIcon({
-        html: '<i class="fas fa-user-circle" style="color: #2563eb; font-size: 24px;"></i>',
-        className: 'user-location-marker',
-        iconSize: [24, 24]
+        // Add marker for a location
+        function addLocationMarker(location, index) {
+    const icon = L.divIcon({
+        className: 'custom-marker-container',
+        html: `<div class="custom-marker" style="background-color: ${getMarkerColor(index)}">
+                ${location.visited ? '✓' : (index + 1)}
+              </div>`,
+        iconSize: [30, 30]
     });
-    
-    userMarker = L.marker([userLat, userLng], {icon: userIcon})
-        .bindPopup('Your location')
-        .addTo(map);
-    
-    // Add accuracy circle
-    userCircle = L.circle([userLat, userLng], {
-        radius: position.coords.accuracy,
-        color: '#2563eb',
-        fillColor: '#60a5fa',
-        fillOpacity: 0.2
-    }).addTo(map);
-    
-    // Update distances to all locations
-    updateDistances(userLat, userLng);
-    
-    // Find and highlight nearest location
-    const nearest = findNearestLocation(userLat, userLng);
-    updateNearestLocationInfo(nearest);
-}
 
-// Update distances to all locations
-function updateDistances(userLat, userLng) {
-    locations.forEach(location => {
-        const distance = calculateDistance(
-            userLat, userLng,
-            location.coordinates.lat,
-            location.coordinates.lng
-        );
-        
-        // Update distance in popup
-        const distanceElement = document.getElementById(`distance-${location.id}`);
-        if (distanceElement) {
-            distanceElement.textContent = `${distance.toFixed(1)} km`;
-        }
+    const marker = L.marker(location.coordinates, { icon });
+    marker.bindPopup(createPopupContent(location)).on('click', () => {
+        showLocationDetails(location.id);
     });
-}
+    marker.addTo(map);
 
-// Find nearest location
-function findNearestLocation(userLat, userLng) {
-    return locations.reduce((nearest, location) => {
-        const distance = calculateDistance(
-            userLat, userLng,
-            location.coordinates.lat,
-            location.coordinates.lng
-        );
-        return distance < nearest.distance ? { location, distance } : nearest;
-    }, { location: null, distance: Infinity });
-}
-
-// Update nearest location information
-function updateNearestLocationInfo(nearest) {
-    const locationInfo = document.getElementById('location-info');
-    if (nearest.location) {
-        locationInfo.innerHTML = `
-            <h3>Nearest Location</h3>
-            <p><strong>${nearest.location.name}</strong></p>
-            <p>Distance: ${nearest.distance.toFixed(1)} km</p>
-            <p>Type: ${nearest.location.type}</p>
-            <button onclick="scrollToLocation(${nearest.location.id})" class="filter-btn">
-                <i class="fas fa-map-marker-alt"></i> View Details
-            </button>
-        `;
+    // Add paths if previous location was visited
+    if (index > 0 && locations[index - 1].visited) {
+        drawPathLine(locations[index - 1].coordinates, location.coordinates);
     }
 }
 
-// Handle location errors
-function handleLocationError(error) {
-    let message = 'Unable to retrieve your location. ';
-    switch(error.code) {
-        case error.PERMISSION_DENIED:
-            message += 'Please enable location services to use this feature.';
-            break;
-        case error.POSITION_UNAVAILABLE:
-            message += 'Location information is unavailable.';
-            break;
-        case error.TIMEOUT:
-            message += 'The request to get location timed out.';
-            break;
-        case error.UNKNOWN_ERROR:
-            message += 'An unknown error occurred.';
-            break;
-    }
-    alert(message);
-}
 
-// Location button click handler
-function handleLocationButtonClick() {
-    if (userMarker) {
-        map.setView(userMarker.getLatLng(), 12);
-    } else {
-        startLocationTracking();
-    }
-}
+        // Get marker color based on status
+        function getMarkerColor(index) {
+            if (locations[index].visited) return '#4CAF50';
+            if (index === currentLocationIndex) return '#2196F3';
+            return '#FF5722';
+        }
 
-// Update the initialization
-document.addEventListener('DOMContentLoaded', () => {
-    const map = initMap();
-    initializeRouteVisualization();
-    initializeSearchAndFilter();
-    initializeThemeToggle();
-
-    // Update location button handler
-    document.getElementById('locationButton').addEventListener('click', handleLocationButtonClick);
-});
-
-        // Initialize Application
-        document.addEventListener('DOMContentLoaded', () => {
-            const map = initMap();
-            initializeRouteVisualization();
-            initializeSearchAndFilter();
-            initializeThemeToggle();
-
-            // Help Button Handler
-            document.getElementById('helpButton').addEventListener('click', () => {
-                alert(`Welcome to the Narmada River Route Guide!
-
-Navigation Tips:
-- Use filters above to explore different types of locations
-- Search box helps find specific places or facilities
-- Click "Show More" to see additional details about each location
-- Use the theme toggle for light/dark mode
-- Previous/Next buttons help navigate between connected locations
-
-For the best experience, enable location services to find nearby points of interest.`);
-            });
-
-            // Location Button Handler
-            document.getElementById('locationButton').addEventListener('click', () => {
-                if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(
-                        position => {
-                            const userLat = position.coords.latitude;
-                            const userLng = position.coords.longitude;
-                            
-                            // Find nearest location
-                            const nearest = locations.reduce((nearest, location) => {
-                                const distance = calculateDistance(
-                                    userLat, userLng,
-                                    location.coordinates.lat,
-                                    location.coordinates.lng
-                                );
-                                return distance < nearest.distance ? { location, distance } : nearest;
-                            }, { location: null, distance: Infinity });
-
-                            if (nearest.location) {
-                                alert(`Nearest location: ${nearest.location.name}\nApprox. distance: ${nearest.distance.toFixed(1)} km`);
-                                scrollToLocation(nearest.location.id);
-                            }
-                        },
-                        error => {
-                            let message = 'Unable to retrieve your location. ';
-                            switch(error.code) {
-                                case error.PERMISSION_DENIED:
-                                    message += 'Please enable location services to use this feature.'
-                                    break;
-                                case error.POSITION_UNAVAILABLE:
-                                    message += 'Location information is unavailable.';
-                                    break;
-                                case error.TIMEOUT:
-                                    message += 'The request to get location timed out.';
-                                    break;
-                                case error.UNKNOWN_ERROR:
-                                    message += 'An unknown error occurred.';
-                                    break;
-                            }
-                            alert(message);
-                        }
-                    );
-                } else {
-                    alert('Geolocation is not supported by your browser.');
-                }
-            });
-        });
-
-        // Location Card Creation (Complete Implementation)
-        function createLocationCard(location, showNavigation = false) {
+        // Create popup content
+        function createPopupContent(location) {
             return `
-                <article class="location-card" id="location-${location.id}">
-                    <div class="location-header">
-                        <h2 class="location-title">
-                            <i class="fas fa-${location.icon}"></i>
-                            ${location.name}
-                        </h2>
-                        <span class="location-type">${location.type}</span>
-                    </div>
-
-                    <div class="location-image">
-                        <img src="${location.imageUrl}" alt="${location.name}" loading="lazy">
-                    </div>
-
-                    <div class="location-details">
-                        <p class="location-description">${location.description}</p>
-                        
-                        <div class="location-facilities">
-                            <h3>Available Facilities:</h3>
-                            <ul>
-                                ${location.facilities.map(facility => `
-                                    <li><i class="fas fa-check"></i> ${facility}</li>
-                                `).join('')}
-                            </ul>
-                        </div>
-
-                        <div class="location-coordinates">
-                            <p>
-                                <i class="fas fa-map-marker-alt"></i>
-                                Coordinates: ${location.coordinates.lat}, ${location.coordinates.lng}
-                            </p>
-                        </div>
-
-                        ${location.nearbyAttractions.length ? `
-                            <div class="nearby-attractions">
-                                <h3>Nearby Attractions:</h3>
-                                <ul>
-                                    ${location.nearbyAttractions.map(attraction => `
-                                        <li><i class="fas fa-landmark"></i> ${attraction}</li>
-                                    `).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
-
-                        <div class="contact-info">
-                            <p>
-                                <i class="fas fa-phone"></i>
-                                Contact: ${location.contactInfo}
-                            </p>
-                        </div>
-                    </div>
-
-                    ${showNavigation ? `
-                        <div class="location-navigation">
-                            ${location.prevLocation ? `
-                                <button class="nav-btn prev" onclick="scrollToLocation(${location.prevLocation})">
-                                    <i class="fas fa-arrow-left"></i> Previous Location
-                                </button>
-                            ` : ''}
-                            ${location.nextLocation ? `
-                                <button class="nav-btn next" onclick="scrollToLocation(${location.nextLocation})">
-                                    Next Location <i class="fas fa-arrow-right"></i>
-                                </button>
-                            ` : ''}
-                        </div>
-                    ` : ''}
-                </article>
+                <div class="popup-content">
+                    <h3>${location.name}</h3>
+                    <p>${location.description}</p>
+                    <button onclick="showLocationDetails(${location.id})" class="view-button">
+                        View Details
+                    </button>
+                </div>
             `;
         }
 
-        // Add additional CSS for new components
-        document.head.insertAdjacentHTML('beforeend', `
-            <style>
-                .location-card {
-                    transition: transform 0.3s ease;
-                }
+        // Draw path line between locations
+        function drawPathLine(start, end) {
+            L.polyline([start, end], {
+                color: '#2e5090',
+                weight: 3,
+                opacity: 0.6,
+                dashArray: '10, 10'
+            }).addTo(map);
+        }
 
-                .location-card:hover {
-                    transform: translateY(-4px);
-                }
+        // Show location details modal
+        function showLocationDetails(locationId) {
+            const location = locations.find(loc => loc.id === locationId);
+            const modal = document.getElementById('locationDetails');
+            const overlay = document.getElementById('modalOverlay');
+            
+            modal.innerHTML = createLocationDetailsContent(location);
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+            
+            // Enable closing modal by clicking overlay
+            overlay.onclick = closeLocationDetails;
+        }
 
-                .location-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 1rem;
-                }
+        // Close location details modal
+        function closeLocationDetails() {
+            document.getElementById('locationDetails').style.display = 'none';
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
 
-                .location-title {
-                    font-size: 1.5rem;
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                }
+        // Mark location as visited
+        function markAsVisited(locationId) {
+    const location = locations.find(loc => loc.id === locationId);
+    
+    // Ensure the current location is the one to be marked as visited
+    if (locations.indexOf(location) === currentLocationIndex) {
+        location.visited = true;
+        location.visitedTime = new Date();
+        currentLocationIndex++;
 
-                .location-type {
-                    background: var(--primary);
-                    color: white;
-                    padding: 0.25rem 0.75rem;
-                    border-radius: 1rem;
-                    font-size: 0.875rem;
-                }
+        // Update distance covered, journey time, and last visit
+        updateDistanceCovered();
+        updateJourneyTime();
+        updateLastVisit();
 
-                .location-image {
-                    width: 100%;
-                    height: 200px;
-                    overflow: hidden;
-                    border-radius: 8px;
-                    margin-bottom: 1rem;
-                }
-
-                .location-image img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                }
-
-                .location-facilities ul,
-                .nearby-attractions ul {
-                    list-style: none;
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 0.5rem;
-                    margin: 0.5rem 0;
-                }
-
-                .nav-btn {
-                    background: var(--primary);
-                    color: white;
-                    border: none;
-                    padding: 0.5rem 1rem;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                    transition: background-color 0.3s;
-                }
-
-                .nav-btn:hover {
-                    background: var(--primary-light);
-                }
-
-                .location-navigation {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-top: 1rem;
-                    padding-top: 1rem;
-                    border-top: 1px solid var(--border);
-                }
-
-                @media (max-width: 768px) {
-                    .location-facilities ul,
-                    .nearby-attractions ul {
-                        grid-template-columns: 1fr;
-                    }
-
-                    .location-navigation {
-                        flex-direction: column;
-                        gap: 0.5rem;
-                    }
-
-                    .nav-btn {
-                        width: 100%;
-                        justify-content: center;
-                    }
-                }
-            </style>
-        `);
-
-
-// Add these styles to the existing styles section
-const newStyles = `
-.route-point {
-    transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.route-point.nearest {
-    transform: scale(1.1);
-    position: relative;
-}
-
-.route-point.nearest::before {
-    content: '📍 You are near here';
-    position: absolute;
-    top: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--primary);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    animation: bounce 1s infinite;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-5px); }
-}
-
-.route-point:not(.nearest) {
-    opacity: 0.7;
-}`;
-
-// Add the styles to the document
-document.head.insertAdjacentHTML('beforeend', `<style>${newStyles}</style>`);
-
-// Update the updateNearestLocationInfo function
-function updateNearestLocationInfo(nearest) {
-    const locationInfo = document.getElementById('location-info');
-    if (nearest.location) {
-        // Update location info card
-        locationInfo.innerHTML = `
-            <h3>Nearest Location</h3>
-            <p><strong>${nearest.location.name}</strong></p>
-            <p>Distance: ${nearest.distance.toFixed(1)} km</p>
-            <p>Type: ${nearest.location.type}</p>
-            <button onclick="scrollToLocation(${nearest.location.id})" class="filter-btn">
-                <i class="fas fa-map-marker-alt"></i> View Details
-            </button>
-        `;
-
-        // Update route visualization
-        const routePoints = document.querySelectorAll('.route-point');
-        routePoints.forEach(point => {
-            point.classList.remove('nearest');
-            if (point.querySelector('.point-label').textContent === nearest.location.name) {
-                point.classList.add('nearest');
-            }
-        });
+        updateProgress();
+        saveData();
+        initializeMap();
+        showNotification(`🎉 You've visited ${location.name}!`);
+        checkAchievements();
+        closeLocationDetails();
+    } else {
+        showNotification('You must visit locations in order', 3000);
     }
 }
 
-// Update the initializeRouteVisualization function
-function initializeRouteVisualization() {
-    const routeMap = document.getElementById('routeMap');
-    routeMap.innerHTML = locations.map(location => `
-        <div class="route-point" id="route-point-${location.id}">
-            <div class="point-icon">
-                <i class="fas fa-${location.icon}"></i>
-            </div>
-            <span class="point-label">${location.name}</span>
-        </div>
-    `).join('');
+function updateLastVisit() {
+    const lastVisitedLocation = locations
+        .filter(loc => loc.visited)
+        .sort((a, b) => new Date(b.visitedTime) - new Date(a.visitedTime))[0];
+
+    if (lastVisitedLocation && lastVisitedLocation.visitedTime) {
+        const lastVisitTime = new Date(lastVisitedLocation.visitedTime);
+        document.getElementById('lastVisit').textContent = lastVisitTime.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } else {
+        document.getElementById('lastVisit').textContent = 'None';
+    }
 }
+
+
+
+function updateDistanceCovered() {
+    const distanceCovered = locations
+        .filter(loc => loc.visited)
+        .reduce((total, loc) => total + loc.distance, 0);
+
+    document.getElementById('distanceCovered').textContent = `${distanceCovered} km`;
+}
+
+
+
+        function createLocationDetailsContent(location) {
+    return `
+        <button class="close-button" onclick="closeLocationDetails()">&times;</button>
+        <h2>${location.name}</h2>
+        <p>${location.description}</p>
+        <div class="photo-gallery">
+            ${location.gallery.map(image => `<img src="${image}" alt="Gallery image" class="gallery-image">`).join('')}
+        </div>
+        <div class="location-facts">
+            <h3>Interesting Facts</h3>
+            <ul>
+                ${location.facts.map(fact => `<li>${fact}</li>`).join('')}
+            </ul>
+        </div>
+        <div class="location-actions">
+            <textarea placeholder="Notes..." onblur="saveNotes(${location.id}, this.value)">${location.notes || ''}</textarea>
+            ${location.visited ? `
+                <button onclick="undoVisit(${location.id})" class="view-button" style="background-color: var(--danger-color); color: white;">
+                    Undo Visit
+                </button>
+            ` : `
+                <button onclick="markAsVisited(${location.id})" class="view-button" style="background-color: var(--secondary-color); color: white;">
+                    Mark as Visited
+                </button>
+            `}
+        </div>
+    `;
+}
+
+
+
+        // Undo visit to location
+        function undoVisit(locationId) {
+    const locationIndex = locations.findIndex(loc => loc.id === locationId);
+    const location = locations[locationIndex];
+
+    // Check if the location is visited and if it's the most recent one
+    if (location.visited && locationIndex === currentLocationIndex - 1) {
+        location.visited = false;
+        location.visitedTime = null;
+        currentLocationIndex--;
+
+        updateProgress();
+        saveData();
+        initializeMap();
+        showNotification(`Visit to ${location.name} has been undone`);
+        closeLocationDetails();
+    } else {
+        showNotification('Cannot undo visit: You must undo the most recent visit first', 3000);
+    }
+}
+
+
+        // Save notes for a location
+        function saveNotes(locationId, notes) {
+            const location = locations.find(loc => loc.id === locationId);
+            if (location) {
+                location.notes = notes;
+                saveData();
+                showNotification('Notes saved successfully');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, duration = 3000) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, duration);
+        }
+
+        // Show achievement
+        function showAchievement(message) {
+            const achievement = document.getElementById('achievement');
+            achievement.textContent = `🏆 ${message}`;
+            achievement.style.display = 'block';
+            
+            setTimeout(() => {
+                achievement.style.display = 'none';
+            }, 5000);
+        }
+
+        // Check for achievements
+        function checkAchievements() {
+            const visitedCount = locations.filter(loc => loc.visited).length;
+            const totalLocations = locations.length;
+            
+            if (visitedCount === 1) {
+                showAchievement('First Steps: Visit your first location!');
+            } else if (visitedCount === Math.floor(totalLocations / 2)) {
+                showAchievement('Halfway There: Visit half of all locations!');
+            } else if (visitedCount === totalLocations) {
+                showAchievement('Journey Complete: Visit all locations!');
+            }
+        }
+
+        // Find user's location
+        function locateUser() {
+    if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                const userLocation = [position.coords.latitude, position.coords.longitude];
+                map.setView(userLocation, 11);
+
+                const userMarker = L.marker(userLocation, {
+                    icon: L.divIcon({
+                        className: 'custom-marker-container',
+                        html: '<div class="custom-marker" style="background-color: #9C27B0"><i class="fas fa-user"></i></div>'
+                    })
+                }).addTo(map);
+
+                userMarker.bindPopup('You are here').openPopup();
+            },
+            error => {
+                showNotification('Unable to access your location: ' + error.message, 3000);
+            }
+        );
+    } else {
+        showNotification('Geolocation is not supported by your browser', 3000);
+    }
+}
+
+
+        // Save data to localStorage
+        function saveData() {
+    const data = {
+        locations: locations,
+        currentLocationIndex: currentLocationIndex,
+        journeyStartTime: journeyStartTime
+    };
+    localStorage.setItem('narmadaExplorerData', JSON.stringify(data));
+}
+
+
+        // Load saved data from localStorage
+        function loadSavedData() {
+    const savedData = localStorage.getItem('narmadaExplorerData');
+    if (savedData) {
+        try {
+            const data = JSON.parse(savedData);
+            locations.forEach((location, index) => {
+                if (data.locations && data.locations[index]) {
+                    Object.assign(location, data.locations[index]);
+                }
+            });
+            currentLocationIndex = data.currentLocationIndex || 0;
+            journeyStartTime = data.journeyStartTime ? new Date(data.journeyStartTime) : null;
+
+            updateProgress();
+            if (map) initializeMap();
+        } catch (error) {
+            console.error('Error loading data:', error);
+        }
+    }
+}
+
+function updateProgress() {
+    const visitedCount = locations.filter(loc => loc.visited).length;
+    const totalLocations = locations.length;
+
+    // Update visited count and progress bar
+    document.getElementById('visitedCount').textContent = `${visitedCount}/${totalLocations}`;
+    const progressFill = document.getElementById('progressFill');
+    progressFill.style.width = `${(visitedCount / totalLocations) * 100}%`;
+}
+
+
+        // Initialize the application when the page loads
+        window.onload = initializeApp;
     </script>
 </body>
 </html>
