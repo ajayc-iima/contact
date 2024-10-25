@@ -369,37 +369,20 @@ function initializeMap() {
     }).addTo(map);
     
     locations.forEach((location, index) => {
-        const markerGroup = createNumberedMarker(location, index + 1);
-        markers.set(location.id, markerGroup);
-        markerGroup.addTo(map);
+        const marker = createNumberedMarker(location, index + 1);
+        markers.set(location.id, marker);
+        marker.addTo(map);
     });
 }
 
 function createNumberedMarker(location, number) {
-    const isVisited = location.visited;
-    const fillColor = isVisited ? '#4CAF50' : '#FF5722';
-    const textColor = isVisited ? '#FFFFFF' : '#000000';
-
-    const circleMarker = L.circleMarker([location.lat, location.lng], {
-        radius: 15,
-        fillColor: fillColor,
-        color: '#000',
-        weight: 2,
-        opacity: 1,
-        fillOpacity: 0.8
-    });
-
+    const className = `custom-marker ${location.visited ? 'visited' : ''}`;
     const icon = L.divIcon({
-        className: 'custom-marker-icon',
-        html: `<div style="color: ${textColor}; font-weight: bold;">${number}</div>`,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
+        className: className,
+        html: number.toString(),
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
     });
-
-    const marker = L.marker([location.lat, location.lng], { icon: icon });
-
-    return L.layerGroup([circleMarker, marker]);
-}
     
     const marker = L.marker(location.coordinates, { icon });
     marker.bindPopup(createLocationPopup(location));
