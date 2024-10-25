@@ -288,79 +288,6 @@
                 transform: translateX(-50%);
             }
         }
-
-
-        .locations-panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: white;
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
-  z-index: 1000;
-}
-
-.locations-panel.open {
-  transform: translateX(0);
-}
-
-.back-button {
-  display: none;
-  padding: 10px;
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.back-button::before {
-  content: "←";
-  margin-right: 8px;
-}
-
-@media (max-width: 768px) {
-  .back-button {
-    display: flex;
-  }
-  
-  .locations-panel {
-    padding: 20px;
-  }
-}
-
-.custom-marker {
-    background: white;
-    border: 3px solid var(--primary);
-    border-radius: 50%;
-    color: var(--primary);
-    text-align: center;
-    font-weight: bold;
-    font-size: 14px;
-    line-height: 26px;
-    width: 32px !important;
-    height: 32px !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    transition: all 0.2s ease;
-    z-index: 1000 !important;
-}
-
-.custom-marker:hover {
-    transform: scale(1.1);
-    z-index: 1001 !important;
-}
-
-.custom-marker.visited {
-    background: var(--secondary);
-    border-color: var(--secondary);
-    color: white;
-}
     </style>
 </head>
 <body>
@@ -414,64 +341,6 @@
     { id: 2, name: "Shivkothi", description: "Historic village", coordinates: [22.2248, 76.1164], visited: false },
     { id: 3, name: "Moratakka (Khedighat)", description: "Important river crossing", coordinates: [22.2217, 76.0461], visited: false }
 ];
-
-
-
-    document.addEventListener('DOMContentLoaded', function() {
-    const locationsPanel = document.getElementById('locationsPanel');
-    const locationsButton = document.querySelector('.controls button:first-child'); // Assuming "Locations" is first button
-    
-    // Create back button
-    const backButton = document.createElement('button');
-    backButton.className = 'back-button';
-    backButton.textContent = 'Back';
-    locationsPanel.insertBefore(backButton, locationsPanel.firstChild);
-    
-    // Toggle panel function
-    function togglePanel() {
-        locationsPanel.classList.toggle('open');
-        
-        // Prevent body scrolling when panel is open
-        if (locationsPanel.classList.contains('open')) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-    }
-    
-    // Add click handlers
-    locationsButton.addEventListener('click', function() {
-        togglePanel();
-    });
-    
-    backButton.addEventListener('click', function() {
-        togglePanel();
-    });
-    
-    // Close panel when clicking outside on mobile
-    document.addEventListener('click', function(event) {
-        const isClickInside = locationsPanel.contains(event.target) || 
-                            locationsButton.contains(event.target);
-        
-        if (!isClickInside && locationsPanel.classList.contains('open')) {
-            togglePanel();
-        }
-    });
-    
-    // Handle location selection
-    const locationItems = locationsPanel.querySelectorAll('.location-item'); // Add this class to your location elements
-    locationItems.forEach(item => {
-        item.addEventListener('click', function() {
-            // Handle location selection logic here
-            
-            // Close panel on mobile
-            if (window.innerWidth <= 768) {
-                togglePanel();
-            }
-        });
-    });
-});
-
 let map, userMarker, routingControl, navigationActive = false;
 let markers = new Map();
 let watchId = null;
@@ -506,23 +375,16 @@ function initializeMap() {
     });
 }
 
-/* Update the marker creation function */
 function createNumberedMarker(location, number) {
     const className = `custom-marker ${location.visited ? 'visited' : ''}`;
     const icon = L.divIcon({
         className: className,
-        html: `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">${number}</div>`,
+        html: number.toString(),
         iconSize: [32, 32],
-        iconAnchor: [16, 16],
-        popupAnchor: [0, -16]
+        iconAnchor: [16, 16]
     });
     
-    const marker = L.marker(location.coordinates, { 
-        icon,
-        zIndexOffset: 1000  // Ensure markers stay above other map elements
-    });
-    
-    // Remove the JavaScript hover handlers since we're using CSS
+    const marker = L.marker(location.coordinates, { icon });
     marker.bindPopup(createLocationPopup(location));
     return marker;
 }
@@ -573,19 +435,6 @@ function toggleVisited(locationId) {
             updateNavigationRoute();
         }
     }
-}
-// Update marker appearance function
-function updateMarkerAppearance(marker, location, number) {
-    const className = `custom-marker ${location.visited ? 'visited' : ''}`;
-    const icon = L.divIcon({
-        className: className,
-        html: `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">${number}</div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-        popupAnchor: [0, -16]
-    });
-    marker.setIcon(icon);
-    marker.setZIndexOffset(1000); // Maintain high z-index when updating
 }
 
 function setupGeolocationWatcher() {
@@ -754,12 +603,7 @@ function renderLocationsList() {
     const panel = document.getElementById('locationsPanel');
     panel.innerHTML = `
         <div style="padding: 1rem; background: var(--primary); color: white;">
-            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                <button onclick="toggleLocationsPanel()" class="back-btn">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <h2 style="font-size: 1.1rem; margin: 0;">Sacred Locations</h2>
-            </div>
+            <h2 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Sacred Locations</h2>
             <p style="font-size: 0.9rem; opacity: 0.9;">
                 ${locations.filter(l => l.visited).length} of ${locations.length} visited
             </p>
@@ -794,131 +638,6 @@ function renderLocationsList() {
         `).join('')}
     `;
 }
-function addStyles() {
-    const styleSheet = document.createElement("style");
-    styleSheet.textContent = `
-        .locations-panel {
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            width: 100%;
-            max-width: 400px;
-            background: white;
-            transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1000;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: var(--safe-bottom);
-        }
-
-        .locations-panel.active {
-            transform: translateX(0);
-        }
-
-        .back-btn {
-            background: none;
-            border: none;
-            color: white;
-            padding: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            transition: transform 0.2s;
-            margin-right: 0.5rem;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .back-btn:hover {
-            transform: translateX(-2px);
-        }
-
-        .back-btn:active {
-            transform: translateX(-4px);
-        }
-
-        @media (max-width: 768px) {
-            .locations-panel {
-                width: 100%;
-                max-width: 100%;
-            }
-        }
-    `;
-    document.head.appendChild(styleSheet);
-}
-
-function renderLocationsList() {
-    const panel = document.getElementById('locationsPanel');
-    panel.innerHTML = `
-        <div style="padding: 1rem; background: var(--primary); color: white;">
-            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                <button type="button" class="back-btn" onclick="toggleLocationsPanel()">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <h2 style="font-size: 1.1rem; margin: 0;">Sacred Locations</h2>
-            </div>
-            <p style="font-size: 0.9rem; opacity: 0.9;">
-                ${locations.filter(l => l.visited).length} of ${locations.length} visited
-            </p>
-        </div>
-        ${locations.map((location, index) => `
-            <div class="location-card ${location.visited ? 'visited' : ''}" 
-                 onclick="handleLocationCardClick(${location.id}, event)">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <div style="background: ${location.visited ? 'var(--secondary)' : 'var(--primary)'}; 
-                                color: white; 
-                                width: 24px; 
-                                height: 24px; 
-                                border-radius: 50%; 
-                                display: flex; 
-                                align-items: center; 
-                                justify-content: center;
-                                font-size: 0.9rem;">
-                        ${index + 1}
-                    </div>
-                    <div style="flex: 1;">
-                        <h3>${location.name}</h3>
-                        <p>${location.description}</p>
-                    </div>
-                    <button 
-                        type="button"
-                        onclick="toggleVisited(${location.id})" 
-                        class="btn-visit ${location.visited ? 'undo' : ''}"
-                        style="margin: 0; padding: 6px 8px;">
-                        <i class="fas ${location.visited ? 'fa-undo' : 'fa-check'}"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('')}
-    `;
-}
-
-// Add click outside handler to close panel
-function addClickOutsideHandler() {
-    document.addEventListener('click', function(event) {
-        const panel = document.getElementById('locationsPanel');
-        const locationsButton = document.querySelector('.controls button:first-child');
-        
-        if (panel.classList.contains('active') && 
-            !panel.contains(event.target) && 
-            event.target !== locationsButton && 
-            !locationsButton.contains(event.target)) {
-            toggleLocationsPanel();
-        }
-    });
-}
-
-// Initialize everything
-window.onload = function() {
-    initializeApp();
-    addStyles();
-    addClickOutsideHandler();
-};
-// Call this function when the page loads
-window.addEventListener('load', addStyles);
 
 function handleLocationCardClick(locationId, event) {
     if (event.target.closest('.btn-visit')) {
@@ -939,15 +658,7 @@ function panToLocation(locationId) {
 }
 
 function toggleLocationsPanel() {
-    const panel = document.getElementById('locationsPanel');
-    const isActive = panel.classList.contains('active');
-    
-    // Toggle the active class
-    if (isActive) {
-        panel.classList.remove('active');
-    } else {
-        panel.classList.add('active');
-    }
+    document.getElementById('locationsPanel').classList.toggle('active');
 }
 
 function toggleFullscreen() {
