@@ -257,6 +257,21 @@
             margin-bottom: 12px;
             color: #666;
         }
+        .custom-marker {
+            background-color: #007bff; /* Circle color */
+            color: black; /* Text color */
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 17px;
+            border-radius: 50%; /* Makes the background circular */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid white; /* Optional: adds a white border around the circle */
+            box-shadow: 0 2px 5px;/* Optional: adds a shadow for better visibility */
+        }
+
 
         @keyframes slideUp {
             from { transform: translateY(20px); opacity: 0; }
@@ -348,7 +363,20 @@
     { id: 9, name: "Bakawan (grain area)", description: "", coordinates: [22.16759, 75.85313], visited: false },
     { id: 10, name: "Mardana ()", description: "", coordinates: [22.17572, 75.82026], visited: false },
     { id: 11, name: "Nagawan ()", description: "", coordinates: [22.17393, 75.79483], visited: false },
-    { id: 12, name: "Teli Bhatyan (Siyaram Baba)", description: "", coordinates: [22.15513, 75.76333], visited: false }
+    { id: 12, name: "Teli Bhatyan (Siyaram Baba)", description: "", coordinates: [22.15513, 75.76333], visited: false },
+    { id: 13, name: "Ramkrishna Hari Seva Ashram", description: "Community food distribution area.", coordinates: [22.14174, 75.76258], visited: false },
+    { id: 14, name: "Sasavat", description: "Small village.", coordinates: [22.13937, 75.73701], visited: false },
+    { id: 15, name: "Amalath", description: "Village area.", coordinates: [22.13329, 75.71909], visited: false },
+    { id: 16, name: "Lepa", description: "Farming area.", coordinates: [22.15253, 75.68725], visited: false },
+    { id: 17, name: "Mankar Kheda", description: "Village near forest area.", coordinates: [22.16541, 75.65536], visited: false },
+    { id: 18, name: "Kathora", description: "Traditional farming village.", coordinates: [22.16626, 75.63405], visited: false },
+    { id: 19, name: "Bargav", description: "Grain production area.", coordinates: [22.1516472, 75.6236711], visited: false },
+    { id: 20, name: "Shalivahan", description: "Quiet village with historical significance.", coordinates: [22.16313, 75.58830], visited: false },
+    { id: 21, name: "Nawdatodi", description: "Grain area with religious sites.", coordinates: [22.16336, 75.58381], visited: false },
+    { id: 22, name: "Dhalkheda", description: "Traditional village.", coordinates: [22.15265, 75.53358], visited: false },
+    { id: 23, name: "Balgav", description: "Village known for local crops.", coordinates: [22.14904, 75.50331], visited: false },
+    { id: 24, name: "Khalghat", description: "Village on the river.", coordinates: [22.15685, 75.44543], visited: false }
+
 
 ];
 let map, userMarker, routingControl, navigationActive = false;
