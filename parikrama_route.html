@@ -271,8 +271,10 @@
             border: 1.5px solid white; /* Optional: adds a white border around the circle */
             box-shadow: 0 2px 5px;/* Optional: adds a shadow for better visibility */
         }
-
-
+        .custom-marker.visited {
+            background-color: red; /* red for visited locations */
+        }
+        
         @keyframes slideUp {
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -418,7 +420,7 @@ function createNumberedMarker(location, number) {
     const icon = L.divIcon({
         className: className,
         html: number.toString(),
-        iconSize: [32, 32],
+        iconSize: [20, 20],
         iconAnchor: [16, 16]
     });
     
