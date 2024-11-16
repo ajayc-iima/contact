@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Narmada River Explorer Pro</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Leaflet Routing Machine CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css" />
+    
+    <style>
+        :root {
+            --primary: #2e5090;
+            --secondary: #4CAF50;
+            --accent: #FFC107;
+            --danger: #dc3545;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-top: env(safe-area-inset-top, 0px);
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: calc(100vh - var(--safe-bottom));
+            background: #f8f9fa;
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: calc(8px + var(--safe-top)) 16px 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 8px;
+            background: white;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .btn {
+            min-height: 44px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px;
+            touch-action: manipulation;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn i {
+            font-size: 16px;
+        }
+
+        .btn span {
+            display: none;
+        }
+
+        .btn.accent { 
+            background: var(--accent);
+            color: #000;
+        }
+
+        .btn.secondary { 
+            background: var(--secondary);
+        }
+
+        .main-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .locations-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            max-width: 100%;
+            background: white;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: var(--safe-bottom);
+        }
+
+        .locations-panel.active {
+            transform: translateX(0);
+        }
+
+        .location-card {
+            padding: 12px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .location-card:hover {
+            background: rgba(0,0,0,0.02);
+        }
+
+        .location-card.visited {
+            opacity: 0.7;
+        }
+
+        .location-card h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .location-card p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .btn-visit {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-visit.undo {
+            background: var(--danger);
+        }
+
+        .btn-visit.accent {
+            background: var(--accent);
+            color: #000;
+            margin-top: 8px;
+        }
+
+        .walking-stats {
+            position: fixed;
+            bottom: calc(16px + var(--safe-bottom));
+            left: 16px;
+            right: 16px;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 100;
+        }
+
+        .walking-stats.active {
+            display: flex;
+            justify-content: space-around;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .stat i {
+            color: var(--primary);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: calc(80px + var(--safe-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1001;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 90%;
+        }
+
+        .toast.show {
+            display: block;
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        .popup {
+            text-align: center;
+            padding: 8px;
+        }
+
+        .popup h3 {
+            margin-bottom: 8px;
+        }
+
+        .popup p {
+            margin-bottom: 12px;
+            color: #666;
+        }
+
+        .custom-marker {
+            background-color: #007bff; /* Circle color */
+            color: black; /* Text color */
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 17px;
+            border-radius: 50%; /* Makes the background circular */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid white; /* Optional: adds a white border around the circle */
+            box-shadow: 0 2px 5px;/* Optional: adds a shadow for better visibility */
+        }
+
+       .custom-marker.visited {
+            background-color: red; /* red for visited locations */
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+       }
+
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from { transform: translate(-50%, 20px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        @media (min-width: 768px) {
+            .btn span {
+                display: inline;
+            }
+
+            .btn i {
+                font-size: 14px;
+            }
+
+            .locations-panel {
+                max-width: 400px;
+                border-left: 1px solid rgba(0,0,0,0.1);
+            }
+
+            .walking-stats {
+                max-width: 400px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1 class="title">🏛️ Narmada River Explorer Pro</h1>
+            <p class="subtitle">Sacred Walking Journey</p>
+        </header>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleLocationsPanel()">
+                <i class="fas fa-list"></i><span>Locations</span>
+            </button>
+            <button class="btn" onclick="locateUser()">
+                <i class="fas fa-location-arrow"></i><span>Find Me</span>
+            </button>
+            <button class="btn accent" id="startJourneyBtn" onclick="toggleNavigation()">
+                <i class="fas fa-walking"></i><span>Start Walking</span>
+            </button>
+            <button class="btn secondary" onclick="resetVisited()">
+                <i class="fas fa-undo"></i><span>Reset</span>
+            </button>
+        </div>
+        
+        <main class="main-content">
+            <div id="map"></div>
+            <div class="locations-panel" id="locationsPanel"></div>
+            <div class="walking-stats" id="walkingStats">
+                <div class="stat">
+                    <i class="fas fa-road"></i>
+                    <span id="distanceDisplay">0.0 km</span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-clock"></i>
+                    <span id="timeDisplay">0 min</span>
+                </div>
+            </div>
+            <div class="toast" id="toast"></div>
+        </main>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    
+    <!-- Leaflet Routing Machine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
+    <script>
+
+    const locations = [
+    { id: 1, name: "Omkareshwar", description: "Sacred Jyotirlinga shrine, 6 km from Shivkothi.", coordinates: [22.244762, 76.152363], visited: false },
+    { id: 2, name: "Shivkothi", description: "Historic village, 6 km from Omkareshwar.", coordinates: [22.2248, 76.1164], visited: false },
+    { id: 3, name: "Moratakka (Khedighat)", description: "Important river crossing, 6 km from Shivkothi.", coordinates: [22.2217, 76.0461], visited: false },
+    { id: 4, name: "Katar Ashram (near petrol pump)", description: "Peaceful ashram near petrol pump, 6 km from Moratakka.", coordinates: [22.21637, 76.02579], visited: false },
+    { id: 5, name: "Toksar (grain area)", description: "Grain farming area, 4 km from Katar Ashram.", coordinates: [22.19106, 75.97189], visited: false },
+    { id: 6, name: "Pitnagar", description: "Village with scenic fields, 2 km from Toksar.", coordinates: [22.18654, 75.95695], visited: false },
+    { id: 7, name: "Kakariya", description: "Small, quiet village, 4 km from Pitnagar.", coordinates: [22.17485, 75.93306], visited: false },
+    { id: 8, name: "Raverkhedi (Bajirao Samadhi)", description: "Bajirao I's Samadhi site, 6 km from Kakariya.", coordinates: [22.17381, 75.87864], visited: false },
+    { id: 9, name: "Bakawan (grain area)", description: "Grain production area, 4 km from Raverkhedi.", coordinates: [22.16759, 75.85313], visited: false },
+    { id: 10, name: "Mardana (​​King Mordhwaj)", description: "Village area of King Mordhwaj, 3 km from Bakawan.", coordinates: [22.17572, 75.82026], visited: false },
+    { id: 11, name: "Nagawan", description: "Quiet, traditional village, 2 km from Mardana.", coordinates: [22.17393, 75.79483], visited: false },
+    { id: 12, name: "Teli Bhatyan (Siyaram Baba)", description: "Siyaram Baba's spiritual site, 5 km from Nagawan.", coordinates: [22.15513, 75.76333], visited: false },
+    { id: 13, name: "Ramkrishna Hari Seva Ashram", description: "Community food distribution area, 2 km from Teli Bhatyan.", coordinates: [22.14174, 75.76258], visited: false },
+    { id: 14, name: "Sasavat", description: "Small village, 3 km from Ramkrishna Hari Seva Ashram.", coordinates: [22.13937, 75.73701], visited: false },
+    { id: 15, name: "Amalath", description: "Village area, 3 km from Sasavat.", coordinates: [22.13329, 75.71909], visited: false },
+    { id: 16, name: "Lepa", description: "Farming area, 5 km from Amalath.", coordinates: [22.15253, 75.68725], visited: false },
+    { id: 17, name: "Mankar Kheda", description: "Village near forest area, 6 km from Lepa.", coordinates: [22.16541, 75.65536], visited: false },
+    { id: 18, name: "Kathora", description: "Traditional farming village, 6 km from Mankar Kheda.", coordinates: [22.16626, 75.63405], visited: false },
+    { id: 19, name: "Bargav", description: "Grain production area, 4 km from Kathora.", coordinates: [22.1516472, 75.6236711], visited: false },
+    { id: 20, name: "Shalivahan", description: "Quiet village with historical significance, 2 km from Bargav.", coordinates: [22.16313, 75.58830], visited: false },
+    { id: 21, name: "Nawdatodi", description: "Grain area with religious sites, 1 km from Shalivahan.", coordinates: [22.16336, 75.58381], visited: false },
+    { id: 22, name: "Dhalkheda", description: "Traditional village, 4 km from Nawdatodi.", coordinates: [22.15265, 75.53358], visited: false },
+    { id: 23, name: "Balgav", description: "Village known for local crops, 5 km from Dhalkheda.", coordinates: [22.14904, 75.50331], visited: false },
+    { id: 24, name: "Khalghat", description: "Village on the river, 5 km from Balgav.", coordinates: [22.15684, 75.44538], visited: false },
+    { id: 25, name: "Khaltanka (grain area)", description: "Grain area, 5 km from Khalghat.", coordinates: [22.14137, 75.45831], visited: false },
+    { id: 26, name: "Chichli (grain area)", description: "Grain area, 5 km away.", coordinates: [22.12992, 75.41917], visited: false },
+    { id: 27, name: "Bhoinda", description: "Village, 3 km away.", coordinates: [22.11414, 75.37209], visited: false },
+    { id: 28, name: "Abhali", description: "Small village, 3 km away.", coordinates: [22.08822, 75.33926], visited: false },
+    { id: 29, name: "Kerva", description: "Village, 3 km away.", coordinates: [22.07798, 75.32197], visited: false },
+    { id: 30, name: "davaana", description: "Farming village, 5 km away.", coordinates: [22.07897, 75.28073], visited: false },
+    { id: 31, name: "Lakhangaon (grain area)", description: "Grain farming area, 15 km away.", coordinates: [22.06903, 75.24550], visited: false },
+    { id: 32, name: "Chakeri", description: "Village, 4 km away.", coordinates: [22.04721, 75.08573], visited: false },
+    { id: 33, name: "Anjad", description: "Village, 6 km away.", coordinates: [22.04238, 75.05361], visited: false },
+    { id: 34, name: "Borlai", description: "Village, 10 km away.", coordinates: [22.03752, 74.99930], visited: false },
+    { id: 35, name: "Barwani (district)", description: "District center, 9 km away.", coordinates: [22.03574, 74.90197], visited: false },
+    { id: 36, name: "Bavanagaja (Jain pilgrimage)", description: "Jain pilgrimage site, 7 km away.", coordinates: [21.99767, 74.85966], visited: false },
+    { id: 37, name: "Andarada (grain area)", description: "Grain area, 9 km away.", coordinates: [21.98014, 74.83177], visited: false },
+    { id: 38, name: "Pati (grain field)", description: "Grain area, 19 km away.", coordinates: [21.94045, 74.74935], visited: false },
+    { id: 39, name: "Bokhrata (grain area)", description: "Grain area, 10 km away.", coordinates: [21.85904, 74.63394], visited: false }
+];
+
+let map , userMarker, routingControl, navigationActive = false;
+let markers = new Map();
+let watchId = null;
+let lastPosition = null;
+let journeyStats = { distanceCovered: 0, startTime: null };
+
+function initializeApp() {
+    initializeMap();
+    renderLocationsList();
+    loadSavedState();
+    setupGeolocationWatcher();
+}
+
+function initializeMap() {
+    map = L.map('map', {
+        zoomControl: false,
+        tap: true
+    }).setView([22.2394, 76.1514], 8);
+    
+    L.control.zoom({
+        position: 'bottomright'
+    }).addTo(map);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    locations.forEach((location, index) => {
+        const marker = createNumberedMarker(location, index + 1);
+        markers.set(location.id, marker);
+        marker.addTo(map);
+    });
+}
+
+function createNumberedMarker(location, number) {
+    const className = `custom-marker ${location.visited ? 'visited' : ''}`;
+    const icon = L.divIcon({
+        className: className,
+        html: number.toString(),
+        iconSize: [20, 20],
+        iconAnchor: [16, 16]
+    });
+    
+    const marker = L.marker(location.coordinates, { icon });
+    marker.bindPopup(createLocationPopup(location));
+    return marker;
+}
+
+
+function createLocationPopup(location) {
+    return `
+        <div class="popup">
+            <h3>${location.name}</h3>
+            <p>${location.description}</p>
+            <button 
+                onclick="toggleVisited(${location.id})" 
+                class="btn-visit ${location.visited ? 'undo' : ''}">
+                ${location.visited ? 
+                    '<i class="fas fa-undo"></i> Undo Visited' : 
+                    '<i class="fas fa-check"></i> Mark as Visited'
+                }
+            </button>
+            <button class="btn-visit accent" onclick="openGoogleMaps(${location.coordinates[0]}, ${location.coordinates[1]})">
+                <i class="fas fa-map-marker-alt"></i> View on Google Maps
+            </button>
+        </div>
+    `;
+}
+
+
+
+function openGoogleMaps(lat, lng) {
+    const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    window.open(url, '_blank');
+}
+
+function toggleVisited(locationId) {
+    const location = locations.find(l => l.id === locationId);
+    if (location) {
+        location.visited = !location.visited;
+        markers.get(locationId).setIcon(
+            createNumberedMarker(location, locations.indexOf(location) + 1).options.icon
+        );
+        markers.get(locationId).setPopupContent(createLocationPopup(location));
+        renderLocationsList();
+        saveState();
+        
+        showToast(
+            location.visited ? 
+            `Marked ${location.name} as visited!` : 
+            `Unmarked ${location.name} as visited`
+        );
+
+        if (navigationActive && !location.visited) {
+            updateNavigationRoute();
+        }
+    }
+}
+
+function setupGeolocationWatcher() {
+    if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(
+            updateUserLocation,
+            null,
+            { enableHighAccuracy: true }
+        );
+    }
+}
+
+function updateUserLocation(position) {
+    const { latitude, longitude } = position.coords;
+    const speed = position.coords.speed || 0;
+    const PROXIMITY_THRESHOLD = speed < 1 ? 30 : 50;
+
+    if (lastPosition) {
+        const distanceMoved = calculateDistance(
+            [latitude, longitude], 
+            [lastPosition.latitude, lastPosition.longitude]
+        );
+        if (distanceMoved < 5) return;
+    }
+    lastPosition = position.coords;
+
+    if (!userMarker) {
+        userMarker = createUserMarker(latitude, longitude);
+    } else {
+        userMarker.setLatLng([latitude, longitude]);
+    }
+
+    if (navigationActive) {
+        updateNavigationRoute();
+        checkProximityToLocations([latitude, longitude], PROXIMITY_THRESHOLD);
+    }
+}
+
+function createUserMarker(lat, lng) {
+    return L.marker([lat, lng], {
+        icon: L.divIcon({
+            html: '<i class="fas fa-user-circle fa-2x" style="color: var(--primary);"></i>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+        })
+    }).addTo(map);
+}
+
+function checkProximityToLocations(userCoords, proximityThreshold) {
+    locations.forEach(location => {
+        if (!location.visited) {
+            const distance = calculateDistance(
+                userCoords,
+                location.coordinates
+            );
+            
+            if (distance <= proximityThreshold) {
+                showToast(`You've reached ${location.name}!`);
+                toggleVisited(location.id);
+            }
+        }
+    });
+}
+
+function calculateDistance(coord1, coord2) {
+    const R = 6371e3;
+    const φ1 = coord1[0] * Math.PI/180;
+    const φ2 = coord2[0] * Math.PI/180;
+    const Δφ = (coord2[0]-coord1[0]) * Math.PI/180;
+    const Δλ = (coord2[1]-coord1[1]) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+}
+
+function showToast(message, duration = 3000) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+function toggleNavigation() {
+    navigationActive = !navigationActive;
+    const btn = document.getElementById('startJourneyBtn');
+    const stats = document.getElementById('walkingStats');
+    
+    if (navigationActive) {
+        btn.innerHTML = '<i class="fas fa-stop"></i><span>Stop</span>';
+        btn.style.background = 'var(--danger)';
+        stats.classList.add('active');
+        startNavigation();
+    } else {
+        btn.innerHTML = '<i class="fas fa-walking"></i><span>Start Walking</span>';
+        btn.style.background = '';
+        stats.classList.remove('active');
+        endNavigation();
+    }
+}
+
+function startNavigation() {
+    const nextLocation = locations.find(l => !l.visited);
+    if (nextLocation && userMarker) {
+        if (routingControl) map.removeControl(routingControl);
+        
+        routingControl = L.Routing.control({
+            waypoints: [
+                userMarker.getLatLng(),
+                L.latLng(nextLocation.coordinates)
+            ],
+            router: L.Routing.osrmv1({
+                serviceUrl: 'https://router.project-osrm.org/route/v1',
+                profile: 'foot'
+            }),
+            lineOptions: {
+                styles: [{color: 'var(--primary)', opacity: 0.8, weight: 5}]
+            },
+            createMarker: () => null,
+            addWaypoints: false,
+            draggableWaypoints: false,
+            fitSelectedRoutes: true,
+            showAlternatives: false
+        }).addTo(map);
+
+        routingControl.on('routesfound', function(e) {
+            updateWalkingStats(e.routes[0]);
+        });
+    } else {
+        showToast('No unvisited locations remaining!');
+        toggleNavigation();
+    }
+}
+
+function updateWalkingStats(route) {
+    const distanceKm = (route.summary.totalDistance / 1000).toFixed(1);
+    const timeMinutes = Math.round(route.summary.totalTime / 60);
+    
+    document.getElementById('distanceDisplay').textContent = `${distanceKm} km`;
+    document.getElementById('timeDisplay').textContent = `${timeMinutes} min`;
+}
+
+function updateNavigationRoute() {
+    if (navigationActive && routingControl && userMarker) {
+        const nextLocation = locations.find(l => !l.visited);
+        if (nextLocation) {
+            routingControl.setWaypoints([
+                userMarker.getLatLng(),
+                L.latLng(nextLocation.coordinates)
+            ]);
+        }
+    }
+}
+
+function endNavigation() {
+    if (routingControl) {
+        map.removeControl(routingControl);
+        routingControl = null;
+    }
+}
+
+function renderLocationsList() {
+    const panel = document.getElementById('locationsPanel');
+    panel.innerHTML = `
+        <div style="padding: 1rem; background: var(--primary); color: white;">
+            <h2 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Sacred Locations</h2>
+            <p style="font-size: 0.9rem; opacity: 0.9;">
+                ${locations.filter(l => l.visited).length} of ${locations.length} visited
+            </p>
+        </div>
+        ${locations.map((location, index) => `
+            <div class="location-card ${location.visited ? 'visited' : ''}" 
+                 onclick="handleLocationCardClick(${location.id}, event)">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="background: ${location.visited ? 'var(--secondary)' : 'var(--primary)'}; 
+                                color: white; 
+                                width: 24px; 
+                                height: 24px; 
+                                border-radius: 50%; 
+                                display: flex; 
+                                align-items: center; 
+                                justify-content: center;
+                                font-size: 0.9rem;">
+                        ${index + 1}
+                    </div>
+                    <div style="flex: 1;">
+                        <h3>${location.name}</h3>
+                        <p>${location.description}</p>
+                    </div>
+                    <button 
+                        onclick="toggleVisited(${location.id})" 
+                        class="btn-visit ${location.visited ? 'undo' : ''}"
+                        style="margin: 0; padding: 6px 8px;">
+                        <i class="fas ${location.visited ? 'fa-undo' : 'fa-check'}"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('')}
+    `;
+}
+
+function handleLocationCardClick(locationId, event) {
+    if (event.target.closest('.btn-visit')) {
+        event.stopPropagation();
+        return;
+    }
+    panToLocation(locationId);
+}
+
+function panToLocation(locationId) {
+    const location = locations.find(l => l.id === locationId);
+    if (location) {
+        map.setView(location.coordinates, 15);
+        const marker = markers.get(locationId);
+        if (marker) marker.openPopup();
+        toggleLocationsPanel();
+    }
+}
+
+function toggleLocationsPanel() {
+    document.getElementById('locationsPanel').classList.toggle('active');
+}
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else if (document.exitFullscreen) {
+        document.exitFullscreen();
+    }
+}
+
+function locateUser() {
+    if (userMarker) {
+        map.setView(userMarker.getLatLng(), 15);
+        showToast('Centered on your location');
+    } else {
+        showToast('Trying to locate you...');
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                const { latitude, longitude } = position.coords;
+                map.setView([latitude, longitude], 15);
+                updateUserLocation(position);
+            },
+            () => showToast('Unable to get your location')
+        );
+    }
+}
+
+function resetVisited() {
+    if (confirm('Are you sure you want to reset all visited locations?')) {
+        locations.forEach(location => {
+            location.visited = false;
+            markers.get(location.id).setIcon(
+                createNumberedMarker(location, locations.indexOf(location) + 1).options.icon
+            );
+        });
+        renderLocationsList();
+        saveState();
+        showToast('All locations reset');
+    }
+}
+
+function saveState() {
+    localStorage.setItem('narmadaExplorerState', JSON.stringify(
+        locations.map(l => ({
+            id: l.id,
+            visited: l.visited
+        }))
+    ));
+}
+
+function loadSavedState() {
+    const savedState = localStorage.getItem('narmadaExplorerState');
+    if (savedState) {
+        const state = JSON.parse(savedState);
+        state.forEach(item => {
+            const location = locations.find(l => l.id === item.id);
+            if (location) {
+                location.visited = item.visited;
+                markers.get(location.id).setIcon(
+                    createNumberedMarker(location, locations.indexOf(location) + 1).options.icon
+                );
+            }
+        });
+        renderLocationsList();
+    }
+}
+
+window.onload = initializeApp;
+    </script>
+</body>
+</html>
